@@ -1,0 +1,47 @@
+# IDE and Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Database backups
+*.sql.bak
+*.sql.backup
+fix_existing_clinic.sql
+migrate.php
+
+# Local configuration
+config/database.local.php
+db_con.php.bak
+
+# Template file is OK to include
+!config/database.infinityfree.php
+
+# Uploaded files (don't push user data)
+assets/uploads/logos/*.jpg
+assets/uploads/logos/*.png
+assets/uploads/logos/*.jpeg
+!assets/uploads/logos/.gitkeep
+
+# Logs
+*.log
+error_log
+php_error.log
+
+# Temporary files
+*.tmp
+*.temp
+fix_password.php
+clinic/treatment/fix_tables.php
+
+# Old backup files
+*.bak
+*.old
+index_old.php.bak
+
+# OS specific
+Thumbs.db
+ehthumbs.db
+Desktop.ini
