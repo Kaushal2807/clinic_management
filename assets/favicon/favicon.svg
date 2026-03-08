@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background Circle -->
+  <circle cx="32" cy="32" r="30" fill="url(#grad1)"/>
+  
+  <!-- Medical Cross -->
+  <path d="M 32 16 L 32 48 M 16 32 L 48 32" 
+        stroke="white" 
+        stroke-width="8" 
+        stroke-linecap="round"/>
+  
+  <!-- Tooth Shape (Small) -->
+  <path d="M 32 20 
+           C 28 20, 26 22, 26 25
+           L 26 30
+           C 26 32, 27 33, 28 33
+           L 36 33
+           C 37 33, 38 32, 38 30
+           L 38 25
+           C 38 22, 36 20, 32 20 Z" 
+        fill="white" 
+        opacity="0.9"/>
+</svg>

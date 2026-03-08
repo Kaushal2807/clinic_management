@@ -1,0 +1,1981 @@
+
+<?php
+include "db_con.php";
+
+/* DRUG */
+$drugOptions = "";
+$q = mysqli_query($conn, "SELECT id, drug_name FROM drug_master");
+while ($row = mysqli_fetch_assoc($q)) {
+    $drugOptions .= "<option value='{$row['id']}'>{$row['drug_name']}</option>";
+}
+
+/* DOSE */
+$doseOptions = "";
+$q = mysqli_query($conn, "SELECT id, dose_name FROM dose_master");
+while ($row = mysqli_fetch_assoc($q)) {
+    $doseOptions .= "<option value='{$row['id']}'>{$row['dose_name']}</option>";
+}
+
+/* FORM */
+$formOptions = "";
+$q = mysqli_query($conn, "SELECT id, form_name FROM drug_form_master");
+while ($row = mysqli_fetch_assoc($q)) {
+    $formOptions .= "<option value='{$row['id']}'>{$row['form_name']}</option>";
+}
+
+/* DURATION */
+$durationOptions = "";
+$q = mysqli_query($conn, "SELECT id, duration_name FROM duration_master");
+while ($row = mysqli_fetch_assoc($q)) {
+    $durationOptions .= "<option value='{$row['id']}'>{$row['duration_name']}</option>";
+}
+
+/* QUANTITY */
+$quantityOptions = "";
+$q = mysqli_query($conn, "SELECT id, quantity_name FROM drug_quantity_master");
+while ($row = mysqli_fetch_assoc($q)) {
+    $quantityOptions .= "<option value='{$row['id']}'>{$row['quantity_name']}</option>";
+}
+
+/* SUGGESTION */
+$suggestOptions = "";
+$q = mysqli_query($conn, "SELECT id, suggestion_name FROM drug_suggestion_master");
+while ($row = mysqli_fetch_assoc($q)) {
+    $suggestOptions .= "<option value='{$row['id']}'>{$row['suggestion_name']}</option>";
+}
+?>
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Swasti Dental Clinic+</title>
+
+  <!-- ======================== -->
+  <!--      BOOTSTRAP CSS       -->
+  <!-- ======================== -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- ======================== -->
+  <!--       TAILWIND CSS       -->
+  <!-- ======================== -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Small custom tweak so Bootstrap and Tailwind utilities coexist nicely -->
+  <style>
+    /* Ensure header stays above any Bootstrap components */
+    header { z-index: 50; }
+    /* Prevent long labels from wrapping on wider screens */
+    .no-wrap { white-space: nowrap; }
+ 
+.btn-outline-purple {
+    color: #9333ea;               /* purple text */
+    border: 1px solid #c084fc;    /* light purple border */
+}
+
+.btn-outline-purple:hover {
+    background-color: #f3e8ff;    /* very light purple */
+    color: #7e22ce;               /* darker purple on hover */
+    border-color: #a855f7;        /* medium purple border */
+}
+
+.select2-container {
+    z-index: 9999;
+}
+.tooth-chart { text-align:center; }
+
+.quadrant {
+  width: 48%;
+  display: inline-block;
+}
+
+.teeth {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.tooth {
+  width: 36px;
+  height: 36px;
+  border: 1px solid #6366f1;
+  border-radius: 6px;
+  line-height: 36px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.tooth.active {
+  background: #6366f1;
+  color: #fff;
+}
+
+
+</style>
+
+</head>
+<body class="bg-gray-50">
+
+  <!-- ============================ -->
+  <!--         HEADER START         -->
+  <!-- ============================ -->
+  <header class="bg-white shadow-md">
+    <div class="container-lg"> <!-- Bootstrap container for responsive width -->
+      <div class="d-flex justify-content-between align-items-center" style="height: 64px;">
+        <div class="d-flex align-items-center">
+          <span class="text-2xl font-bold text-indigo-600">Swasti Dental Clinic+</span>
+        </div>
+
+        <div class="d-flex gap-3 align-items-center">
+          <!-- Add New Patient -->
+        <button 
+    onclick="loadNextPatientId()" 
+    data-bs-toggle="modal" 
+    data-bs-target="#addPatientModal"
+    class="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-600 text-white font-medium px-4 py-2 rounded-lg shadow-md transition">
+    ➕ Add
+</button>
+
+
+
+          <!-- Statistics -->
+          <a href="report.php" 
+             class="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-600 text-white font-medium px-4 py-2 rounded-lg shadow-md transition no-wrap">
+            📊 Report
+          </a>
+
+          <!-- Expense -->
+          <a href="expense.php"
+             class="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-600 text-white font-medium px-4 py-2 rounded-lg shadow-md transition no-wrap">
+            💸 Expense
+          </a>
+
+          <!-- Medicine Management -->
+          <a href="medicine.php"
+             class="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-600 text-white font-medium px-4 py-2 rounded-lg shadow-md transition no-wrap">
+            💊 MT
+          </a>
+
+          <!-- Download -->
+          <a href="download.php"
+             class="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-600 text-white font-medium px-4 py-2 rounded-lg shadow-md transition no-wrap">
+             ⬇ Download
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+  <!-- ============================ -->
+  <!--         HEADER END           -->
+  <!-- ============================ -->
+
+  <!-- ============================ -->
+  <!--        PAGE CONTENT          -->
+  <!-- ============================ -->
+ 
+
+
+   <!-- ============================ -->
+  <!--      search field and buttons after header        -->
+  <!-- ============================ -->
+<div class="container-lg mt-4">
+  <div class="d-flex justify-content-between align-items-center">
+
+    <!-- SEARCH FIELD (LEFT SIDE) -->
+    <input type="text" id="patientSearch" class="form-control w-50"
+       placeholder="Search by Patient ID or Name..."
+       onkeyup="searchPatients()">
+
+
+    <!-- BUTTONS (RIGHT SIDE) -->
+    <div class="d-flex gap-2">
+
+      <!-- Add Treatment Plan -->
+      <button 
+        class="bg-indigo-500 hover:bg-indigo-600 text-white font-medium px-3 py-2 rounded-md shadow-md transition"
+        data-bs-toggle="modal"
+        data-bs-target="#treatmentPlanModal">
+        ➕ Treatment Plan
+      </button>
+
+      <!-- Add Work Done -->
+      <button 
+        class="bg-indigo-500 hover:bg-indigo-600 text-white font-medium px-3 py-2 rounded-md shadow-md transition"
+        data-bs-toggle="modal"
+        data-bs-target="#workDoneModal">
+        ➕ Work Done
+      </button>
+
+      <!-- Add Prescription -->
+      <a href="doctor_add_prescription.php"
+        class="bg-indigo-500 hover:bg-indigo-600 text-white font-medium px-3 py-2 rounded-md shadow-md transition">
+        ➕ Prescription
+      </a>
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  <!-- ========================= -->
+<!-- Add Patient Modal  -->
+<!-- ========================= -->
+<div class="modal fade" id="addPatientModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-content rounded-4 p-3">
+
+      <form id="addPatientForm">
+
+        <div class="modal-body">
+
+          <div class="row g-3">
+
+            <!-- Patient ID -->
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Patient ID</label>
+              <input type="text" name="patient_uid" class="form-control" id="autoPatientId" readonly>
+
+            </div>
+
+            <!-- Full Name -->
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Full Name</label>
+              <input type="text" name="name" class="form-control">
+            </div>
+
+            <!-- Age -->
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Age</label>
+              <input type="number" name="age" class="form-control">
+            </div>
+
+            <!-- Contact Number -->
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Contact Number</label>
+              <input type="text" name="contact_number" class="form-control">
+            </div>
+
+            <!-- Address -->
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Address</label>
+              <input type="text" name="address" class="form-control">
+            </div>
+
+            <!-- Date of Visit -->
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Date of Visit</label>
+              <input type="date" name="date_of_visit" class="form-control" value="<?php echo date('Y-m-d'); ?>">
+            </div>
+
+            <!-- Notes (moved above Total Visit + 2 rows) -->
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Notes</label>
+              <textarea name="notes" class="form-control" rows="2"></textarea>
+            </div>
+
+             <!-- X-Ray Remark (2 rows) -->
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">X-Ray Remark</label>
+              <textarea name="xray_remark" class="form-control" rows="2"></textarea>
+            </div>
+
+
+           
+
+            <!-- Chief Complain (2 rows) -->
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Chief Complain</label>
+              <textarea name="chief_complain" class="form-control" rows="2"></textarea>
+            </div>
+
+            <!-- Medical History (2 rows) -->
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Medical History</label>
+              <textarea name="medical_history" class="form-control" rows="2"></textarea>
+            </div>
+
+            <!-- Oral Diet Habit (2 rows) -->
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Oral Diet Habit</label>
+              <textarea name="oral_diet_habit" class="form-control" rows="2"></textarea>
+            </div>
+
+            <!-- Family History (2 rows) -->
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Family History</label>
+              <textarea name="family_history" class="form-control" rows="2"></textarea>
+            </div>
+
+            <div class="row g-3">
+
+  <!-- Total Visit -->
+  <div class="col-md-3">
+    <label class="form-label fw-semibold">Total Visit</label>
+    <input type="number" name="total_visit" class="form-control" value="1">
+  </div>
+
+  <!-- Total Amount -->
+  <div class="col-md-3">
+    <label class="form-label fw-semibold">Total Amount (₹)</label>
+    <input type="number"
+           name="total_amount"
+           class="form-control"
+           step="0.01"
+           value="0">
+  </div>
+
+  <!-- Payment Status -->
+  <div class="col-md-3">
+    <label class="form-label fw-semibold">Payment Status</label>
+    <select name="payment_status" class="form-select">
+      <option value="pending" selected>Pending</option>
+      <option value="partial">Partial</option>
+      <option value="paid">Paid</option>
+    </select>
+  </div>
+
+  <!-- Payment Pending -->
+  <div class="col-md-3">
+    <label class="form-label fw-semibold">Payment Pending (₹)</label>
+    <input type="number"
+           name="payment_pending"
+           class="form-control"
+           step="0.01"
+           value="0.00">
+  </div>
+
+</div>
+
+
+          </div>
+        </div>
+
+       <div class="modal-footer border-0 d-flex justify-content-center">
+  <button type="submit" 
+          class="bg-indigo-500 hover:bg-indigo-600 text-white font-medium px-6 py-2 rounded-lg shadow-md transition d-flex align-items-center gap-2">
+    💾 Save Patient
+  </button>
+</div>
+
+
+      </form>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+<!-- modala for add treatment plan  -->
+
+<div class="modal fade" id="treatmentPlanModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-md">
+    <div class="modal-content rounded-3 p-3">
+
+      <form id="treatmentPlanForm">
+
+        <div class="modal-header border-0">
+          <h5 class="modal-title text-xl font-semibold">Add Treatment Plan</h5>
+        </div>
+
+        <div class="modal-body">
+          
+          <!-- Diagnosis -->
+          <label class="form-label fw-semibold">Diagnosis</label>
+          <textarea name="diagnosis" class="form-control mb-3" rows="1" required></textarea>
+
+          <!-- Treatment Plan -->
+          <label class="form-label fw-semibold">Treatment Plan</label>
+          <textarea name="treatment" class="form-control" rows="1" required></textarea>
+
+        </div>
+
+        <div class="modal-footer border-0 d-flex justify-content-center">
+          <button type="submit"
+            class="bg-indigo-500 hover:bg-indigo-600 text-white px-5 py-2 rounded-lg shadow-md">
+            💾 Save Treatment Plan
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+
+
+  <!-- ============================ -->
+  <!--      Work done dropdown value modal     -->
+  <!-- ============================ -->
+
+<div class="modal fade" id="workDoneModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-md">
+    <div class="modal-content rounded-3 p-3">
+
+      <form id="workDoneForm">
+
+        <div class="modal-header border-0">
+          <h5 class="modal-title text-xl font-semibold">Add Work Done</h5>
+        </div>
+
+        <div class="modal-body">
+
+          <label class="form-label fw-semibold">Work Done</label>
+          <input type="text" name="work_name" class="form-control"  required>
+
+        </div>
+
+        <div class="modal-footer border-0 d-flex justify-content-center">
+          <button type="submit"
+            class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg shadow-md">
+            💾 Save Work Done
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+<!-- Modern Patient Table -->
+<div class="container-lg mt-5" style="max-width: 1400px; margin: auto;"> <!-- Wider card -->
+  <div class="card shadow-lg border-0 rounded-4">
+    <div class="card-body">
+
+      <h4 class="fw-bold mb-4 text-indigo-600">Patient Records</h4>
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead class="bg-indigo-500 text-white">
+            <tr>
+              <th>Patient ID</th>
+              <th>Name</th>
+              <th class="text-center">Add</th>
+              <th class="text-center">Action</th>
+              <th class="text-center">Print</th>
+            </tr>
+          </thead>
+
+         <tbody id="patientTableBody">
+<?php
+include "db_con.php";
+
+$sql = "SELECT * FROM patients ORDER BY id DESC";
+$result = mysqli_query($conn, $sql);
+
+$counter = 0;
+
+while ($row = mysqli_fetch_assoc($result)) {
+    $counter++;
+    if ($counter > 15) {
+    echo "<tr class='extra-row d-none' data-extra='1'>";
+} else {
+    echo "<tr class='extra-row' data-extra='0'>";
+}
+
+?>
+    
+        <td><?= $row['patient_uid']; ?></td>
+        <td><?= $row['name']; ?></td>
+
+        <td class="text-center">
+     <button class="btn btn-sm btn-outline-primary mb-1"
+        data-bs-toggle="modal"
+        data-bs-target="#treatmentPlanModal2"
+        data-uid="<?= $row['patient_uid'] ?>"
+        data-name="<?= htmlspecialchars($row['name'], ENT_QUOTES) ?>">
+    Treatment
+</button>
+
+
+
+
+
+          <button class="btn btn-sm btn-outline-success mb-1"
+        data-bs-toggle="modal"
+        data-bs-target="#prescriptionModal"
+        onclick="setPrescriptionPatient(
+          '<?= $row['patient_uid'] ?>',
+          '<?= $row['name'] ?>'
+        )">
+Prescription
+</button>
+
+
+           <button class="btn btn-sm btn-outline-purple mb-1"
+        data-bs-toggle="modal"
+        data-bs-target="#patientWorkModal"
+        onclick="setWorkPatient(
+          '<?= $row['patient_uid'] ?>',
+          '<?= $row['name'] ?>'
+        )">
+  Work
+</button>
+
+        </td>
+
+        <td class="text-center">
+            <button class="btn btn-sm text-white mb-1"
+                    style="background:#22c55e;"
+                    data-bs-toggle="modal"
+                    data-bs-target="#updatePatientModal"
+                    onclick="loadPatientData('<?= $row['patient_uid'] ?>')">
+                Update
+            </button>
+
+            <a href="view_treatment_plan.php?patient_uid=<?= urlencode($row['patient_uid']) ?>"
+               class="btn btn-sm btn-outline-primary mb-1">View Treatment</a>
+
+            <a href="view_prescription.php?patient_uid=<?= urlencode($row['patient_uid']) ?>"
+   class="btn btn-sm btn-outline-success mb-1">
+   View Prescription
+</a>
+
+
+           <a href="view_work_done.php?patient_uid=<?= urlencode($row['patient_uid']) ?>"
+   class="btn btn-sm btn-outline-purple mb-1">
+   View Work
+</a>
+
+        </td>
+
+      <td class="text-center">
+  <button class="btn btn-sm text-white me-1"
+          style="background:#0ea5e9;"
+          onclick="printCase('<?= $row['patient_uid'] ?>')">
+    Case
+  </button>
+
+  <!-- CERTIFICATE BUTTON -->
+  <button class="btn btn-sm text-white"
+          style="background:#0ea5e9;"
+          data-bs-toggle="modal"
+          data-bs-target="#certificateModal"
+          onclick="setCertificatePatient(
+            '<?= $row['patient_uid'] ?>',
+            '<?= htmlspecialchars($row['name'], ENT_QUOTES) ?>'
+          )">
+    Certificate
+  </button>
+</td>
+
+    </tr>
+<?php } ?>
+</tbody>
+
+
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================ -->
+<!--       ADD PRESCRIPTION MODAL   -->
+<!-- ============================ -->
+
+
+<div class="modal fade" id="prescriptionModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-content rounded-4 p-3">
+
+      <form id="prescriptionForm">
+
+        <!-- Hidden patient data -->
+
+        <input type="hidden" name="patient_uid" id="pres_patient_uid">
+        <input type="hidden" name="patient_name" id="pres_patient_name">
+         <input type="hidden" name="save_mode" id="save_mode" value="save">
+
+
+        <div class="modal-header border-0">
+          <h5 class="fw-bold text-indigo-600">Add Prescription</h5>
+        </div>
+
+        <div class="modal-body">
+
+          <!-- Patient info -->
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label class="fw-semibold">Patient ID</label>
+              <input type="text" id="show_patient_uid" class="form-control" readonly>
+            </div>
+
+            <div class="col-md-4">
+              <label class="fw-semibold">Patient Name</label>
+              <input type="text" id="show_patient_name" class="form-control" readonly>
+            </div>
+
+            <div class="col-md-4">
+              <label class="fw-semibold">Date</label>
+              <input type="date"
+                     name="prescription_date"
+                     class="form-control"
+                     value="<?= date('Y-m-d') ?>">
+            </div>
+          </div>
+
+          <!-- Prescription table -->
+          <div class="table-responsive">
+            <table class="table table-bordered align-middle text-center">
+  <thead class="table-primary">
+    <tr>
+      <th style="width: 22%">Drug</th>
+      <th style="width: 12%">Dose</th>
+      <th style="width: 12%">Form</th>
+      <th style="width: 12%">Duration</th>
+      <th style="width: 10%">No</th>
+      <th style="width: 6%">Days</th>
+      <th style="width: 12%">Suggest</th>
+      <th style="width: 8%">Total</th>
+      <th style="width: 4%">❌</th>
+    </tr>
+  </thead>
+  <tbody id="prescriptionTableBody"></tbody>
+</table>
+
+          </div>
+
+          <button type="button"
+                  class="btn btn-outline-primary btn-sm"
+                  onclick="addPrescriptionRow()">
+            ➕ Add Drug
+          </button>
+
+        </div>
+
+        <div class="modal-footer border-0 justify-content-center gap-3">
+
+  <!-- Save Only -->
+<button type="submit"
+        name="action"
+        value="save"
+        class="bg-indigo-600 text-white px-6 py-2 rounded-lg shadow">
+  💾 Save Prescription
+</button>
+
+<!-- Save & Print -->
+<button type="button"
+        id="saveAndPrintBtn"
+        class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg shadow">
+  🖨️ Save & Print
+</button>
+
+</div>
+
+
+      </form>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+<!-- ============================ -->
+<!--       work done  MODAL   -->
+<!-- ============================ -->
+
+
+
+
+<!-- ============================ -->
+<!--       WORK DONE MODAL        -->
+<!-- ============================ -->
+<div class="modal fade" id="patientWorkModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content rounded-4 p-3">
+
+      <form id="patientWorkForm">
+
+        <!-- Hidden -->
+        <input type="hidden" name="patient_uid" id="work_patient_uid">
+        <input type="hidden" name="patient_name" id="work_patient_name">
+
+        <div class="modal-header border-0">
+          <h5 class="fw-bold text-indigo-600">Add Work Done</h5>
+        </div>
+
+        <div class="modal-body">
+          <div class="row g-3">
+
+            <!-- Patient ID -->
+            <div class="col-md-6">
+              <label class="fw-semibold">Patient ID</label>
+              <input type="text" id="show_work_patient_uid"
+                     class="form-control" readonly>
+            </div>
+
+            <!-- Patient Name -->
+            <div class="col-md-6">
+              <label class="fw-semibold">Patient Name</label>
+              <input type="text" id="show_work_patient_name"
+                     class="form-control" readonly>
+            </div>
+
+            <!-- Date -->
+            <div class="col-md-6">
+              <label class="fw-semibold">Date</label>
+              <input type="date"
+                     name="work_date"
+                     class="form-control"
+                     value="<?= date('Y-m-d') ?>"
+                     required>
+            </div>
+
+            <!-- Work Done -->
+            <div class="col-md-6">
+              <label class="fw-semibold">
+                Work Done <span class="text-danger">*</span>
+              </label>
+              <select name="work_done_id"
+                      class="form-select work-done-select"
+                      required>
+                <option value="">Select Work</option>
+                <?php
+                $q = mysqli_query($conn,"SELECT * FROM work_done");
+                while($w = mysqli_fetch_assoc($q)){
+                  echo "<option value='{$w['id']}'>{$w['work_name']}</option>";
+                }
+                ?>
+              </select>
+            </div>
+
+            <!-- Description -->
+            <div class="col-md-12">
+              <label class="fw-semibold">Description</label>
+              <textarea name="description"
+                        class="form-control"
+                        rows="2"></textarea>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="modal-footer border-0 justify-content-center">
+          <button type="submit"
+                  class="bg-indigo-600 text-white px-6 py-2 rounded-lg shadow">
+            💾 Save Work Done
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- ============================ -->
+<!--       UPDATE PATIENT MODAL   -->
+<!-- ============================ -->
+<div class="modal fade" id="updatePatientModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-content rounded-4 p-3">
+
+      <form id="updatePatientForm">
+
+        <input type="hidden" name="patient_uid" id="update_uid">
+ <!-- Patient ID -->
+
+        <div class="modal-body">
+
+          <div class="row g-3">
+
+            <!-- Patient UID -->
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Patient ID</label>
+              <input type="text" id="update_patient_uid" name="patient_uid" class="form-control" readonly>
+            </div>
+
+            <!-- Full Name -->
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Full Name</label>
+              <input type="text" id="update_name" name="name" class="form-control">
+            </div>
+
+            <!-- Age -->
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Age</label>
+              <input type="number" id="update_age" name="age" class="form-control">
+            </div>
+
+            <!-- Contact Number -->
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Contact Number</label>
+              <input type="text" id="update_contact" name="contact_number" class="form-control">
+            </div>
+
+            <!-- Address -->
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Address</label>
+              <input type="text" id="update_address" name="address" class="form-control">
+            </div>
+
+            <!-- Date of Visit -->
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Date of Visit</label>
+              <input type="date" id="update_date" name="date_of_visit" class="form-control">
+            </div>
+
+            <!-- Notes -->
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Notes</label>
+              <textarea id="update_notes" name="notes" class="form-control" rows="2"></textarea>
+            </div>
+
+            <!-- X-ray Remark -->
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">X-Ray Remark</label>
+              <textarea id="update_xray" name="xray_remark" class="form-control" rows="2"></textarea>
+            </div>
+
+            <!-- Chief Complain -->
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Chief Complain</label>
+              <textarea id="update_chief" name="chief_complain" class="form-control" rows="2"></textarea>
+            </div>
+
+            <!-- Medical History -->
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Medical History</label>
+              <textarea id="update_medical" name="medical_history" class="form-control" rows="2"></textarea>
+            </div>
+
+            <!-- Oral Diet Habit -->
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Oral Diet Habit</label>
+              <textarea id="update_oral" name="oral_diet_habit" class="form-control" rows="2"></textarea>
+            </div>
+
+            <!-- Family History -->
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Family History</label>
+              <textarea id="update_family" name="family_history" class="form-control" rows="2"></textarea>
+            </div>
+
+          <div class="row g-3">
+
+  <!-- Total Visit -->
+  <div class="col-md-3">
+    <label class="form-label fw-semibold">Total Visit</label>
+    <input type="number"
+           id="update_visit"
+           name="total_visit"
+           class="form-control">
+  </div>
+
+  <!-- Total Amount -->
+  <div class="col-md-3">
+    <label class="form-label fw-semibold">Total Amount (₹)</label>
+    <input type="number"
+           id="update_total_amount"
+           name="total_amount"
+           class="form-control"
+           step="0.01">
+  </div>
+
+  <!-- Payment Status -->
+  <div class="col-md-3">
+    <label class="form-label fw-semibold">Payment Status</label>
+    <select id="update_paystatus"
+            name="payment_status"
+            class="form-select">
+      <option value="pending">Pending</option>
+      <option value="partial">Partial</option>
+      <option value="paid">Paid</option>
+    </select>
+  </div>
+
+  <!-- Payment Pending -->
+  <div class="col-md-3">
+    <label class="form-label fw-semibold">Payment Pending (₹)</label>
+    <input type="number"
+           id="update_pending"
+           name="payment_pending"
+           class="form-control"
+           step="0.01">
+  </div>
+
+</div>
+
+
+          </div>
+        </div>
+
+        <div class="modal-footer border-0 d-flex justify-content-center">
+          <button type="submit"
+            class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-2 rounded-lg shadow-md">
+            💾 Update Patient
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+<!-- ============================ -->
+<!--   TREATMENT + TOOTH MODAL   -->
+<!-- ============================ -->
+<div class="modal fade" id="treatmentPlanModal2" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content rounded-4 p-3">
+
+      <form id="treatmentPatientForm">
+
+        <!-- Hidden patient -->
+        <input type="hidden" name="patient_uid" id="treat_uid">
+
+        <!-- Header -->
+        <div class="modal-header border-0">
+          <h5 class="fw-bold text-indigo-600">Add Treatment</h5>
+        </div>
+
+        <div class="modal-body">
+          <div class="row g-3">
+
+            <!-- Patient Info -->
+            <div class="col-md-6">
+              <label class="fw-semibold">Patient ID</label>
+              <input type="text" id="show_treat_uid" class="form-control" readonly>
+            </div>
+
+            <div class="col-md-6">
+              <label class="fw-semibold">Patient Name</label>
+              <input type="text" id="show_treat_name" class="form-control" readonly>
+            </div>
+
+            <!-- ===================== -->
+            <!-- TOOTH SELECTION GRID -->
+            <!-- ===================== -->
+
+            <!-- Upper Right -->
+            <div class="tooth-chart">
+
+  <!-- Upper -->
+  <div class="row">
+    <div class="quadrant right">
+      <h6>Upper Right</h6>
+      <div class="teeth">
+        <?php for($i=8;$i>=1;$i--): ?>
+          <span class="tooth" data-q="ur" data-tooth="<?= $i ?>"><?= $i ?></span>
+        <?php endfor; ?>
+      </div>
+    </div>
+
+    <div class="quadrant left">
+      <h6>Upper Left</h6>
+      <div class="teeth">
+        <?php for($i=1;$i<=8;$i++): ?>
+          <span class="tooth" data-q="ul" data-tooth="<?= $i ?>"><?= $i ?></span>
+        <?php endfor; ?>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lower -->
+  <div class="row mt-3">
+    <div class="quadrant right">
+      <h6>Lower Right</h6>
+      <div class="teeth">
+        <?php for($i=8;$i>=1;$i--): ?>
+          <span class="tooth" data-q="lr" data-tooth="<?= $i ?>"><?= $i ?></span>
+        <?php endfor; ?>
+      </div>
+    </div>
+
+    <div class="quadrant left">
+      <h6>Lower Left</h6>
+      <div class="teeth">
+        <?php for($i=1;$i<=8;$i++): ?>
+          <span class="tooth" data-q="ll" data-tooth="<?= $i ?>"><?= $i ?></span>
+        <?php endfor; ?>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Hidden inputs (DB mapping) -->
+<input type="hidden" name="tooth_upper_right" id="ur">
+<input type="hidden" name="tooth_upper_left"  id="ul">
+<input type="hidden" name="tooth_lower_right" id="lr">
+<input type="hidden" name="tooth_lower_left"  id="ll">
+
+
+<?php
+// Treatment Plan Master
+$diagnosisOptions = "";
+$treatmentOptions = "";
+
+$q = mysqli_query($conn, "SELECT id, diagnosis, treatment FROM treatment_plan");
+
+while ($row = mysqli_fetch_assoc($q)) {
+    $diagnosisOptions .= "<option value='{$row['id']}'>{$row['diagnosis']}</option>";
+    $treatmentOptions .= "<option value='{$row['id']}'>{$row['treatment']}</option>";
+}
+?>
+
+
+<!-- Diagnosis -->
+<div class="col-md-6">
+  <label class="fw-semibold">Diagnosis</label>
+  <select name="diagnosis_id"
+          class="form-select select-diagnosis"
+          required>
+    <option value="">Select Diagnosis</option>
+    <?= $diagnosisOptions ?>
+  </select>
+</div>
+
+<!-- Treatment -->
+<div class="col-md-6">
+  <label class="fw-semibold">Treatment</label>
+  <select name="treatment_id"
+          class="form-select select-treatment"
+          required>
+    <option value="">Select Treatment</option>
+    <?= $treatmentOptions ?>
+  </select>
+</div>
+
+           <!-- Estimates -->
+<div class="col-md-6">
+  <label class="fw-semibold">Estimates</label>
+  <input type="text"
+         name="estimates"
+         class="form-control"
+         >
+</div>
+
+            <!-- Remarks -->
+            <div class="col-md-6">
+              <label class="fw-semibold">Remarks</label>
+              <textarea name="remarks" class="form-control" rows="2"></textarea>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="modal-footer border-0 justify-content-center">
+          <button type="submit"
+                  class="bg-indigo-600 text-white px-6 py-2 rounded-lg shadow">
+            💾 Save Treatment
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+<!-- ============================ -->
+<!--       CERTIFICATE MODAL      -->
+<!-- ============================ -->
+<div class="modal fade" id="certificateModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-md">
+    <div class="modal-content rounded-4 p-3">
+
+      <form id="certificateForm">
+
+        <!-- Hidden -->
+        <input type="hidden" name="patient_uid" id="cert_patient_uid">
+        <input type="hidden" name="patient_name" id="cert_patient_name">
+
+        <div class="modal-header border-0">
+          <h5 class="fw-bold text-indigo-600">Generate Certificate</h5>
+        </div>
+
+        <div class="modal-body">
+          <div class="row g-3">
+
+            <!-- Patient ID -->
+            <div class="col-md-6">
+              <label class="fw-semibold">Patient ID</label>
+              <input type="text"
+                     id="show_cert_patient_uid"
+                     class="form-control"
+                     readonly>
+            </div>
+
+            <!-- Patient Name -->
+            <div class="col-md-6">
+              <label class="fw-semibold">Patient Name</label>
+              <input type="text"
+                     id="show_cert_patient_name"
+                     class="form-control"
+                     readonly>
+            </div>
+
+            <!-- Date (CENTERED IN ROW) -->
+<div class="col-md-12 d-flex justify-content-center">
+  <div class="w-50">
+    <label class="fw-semibold text-center d-block">Date</label>
+    <input type="date"
+           name="certificate_date"
+           class="form-control text-center"
+           value="<?= date('Y-m-d') ?>"
+           required>
+  </div>
+</div>
+
+
+            <!-- Complaints -->
+            <div class="col-md-12">
+              <label class="fw-semibold">Complaints</label>
+              <textarea name="complaints"
+                        class="form-control"
+                        rows="2"
+                        required></textarea>
+            </div>
+
+            <!-- Treatment Done -->
+            <div class="col-md-12">
+              <label class="fw-semibold">Treatment Done</label>
+              <textarea name="treatment_done"
+                        class="form-control"
+                        rows="2"
+                        required></textarea>
+            </div>
+
+            <!-- Advise -->
+            <div class="col-md-12">
+              <label class="fw-semibold">Advise</label>
+              <textarea name="advise"
+                        class="form-control"
+                        rows="2"></textarea>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="modal-footer border-0 justify-content-center">
+          <button type="submit"
+                  class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg shadow">
+            📄 Generate Certificate
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+  <!-- ============================ -->
+  <!--      BOOTSTRAP JS BUNDLE     -->
+  <!-- ============================ -->
+   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- SweetAlert -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+ <script>
+
+  function loadNextPatientId() {
+    fetch("get_last_patient_id.php")
+    .then(response => response.text())
+    .then(lastId => {
+
+        // safety check
+        if (!lastId || !lastId.includes("-")) {
+            lastId = "PT-100";
+        }
+
+        const [prefix, num] = lastId.split("-");
+        let nextNum = parseInt(num);
+
+        // if num invalid → fallback
+        if (isNaN(nextNum)) nextNum = 100;
+
+        nextNum++;
+
+        const newId = `${prefix}-${nextNum}`;
+
+        document.getElementById("autoPatientId").value = newId;
+    })
+    .catch(() => {
+        // if PHP file fails → fallback safe ID
+        document.getElementById("autoPatientId").value = "PT-101";
+    });
+}
+
+
+
+
+
+document.getElementById("addPatientForm").addEventListener("submit", function(e) {
+    e.preventDefault(); // prevent page reload
+
+    let formData = new FormData(this);
+
+    fetch("add_patient.php", {
+        method: "POST",
+        body: formData
+    })
+    .then(res => res.text())
+    .then(data => {
+      console.log("SERVER RESPONSE: ", data);
+        if (data.trim() === "success") {
+
+            Swal.fire({
+                icon: "success",
+                title: "Patient Saved!",
+                text: "Record added successfully.",
+                timer: 1500,
+                showConfirmButton: false
+            });
+
+            // Close modal
+            let modalEl = document.getElementById("addPatientModal");
+            let modal = bootstrap.Modal.getInstance(modalEl);
+            modal.hide();
+
+            // Reset form
+            document.getElementById("addPatientForm").reset();
+              // 🔥 Reload page AFTER the alert finishes
+    setTimeout(() => {
+        location.reload();
+    }, 1500);
+
+        } else {
+            Swal.fire({
+                icon: "error",
+                title: "Failed!",
+                text: "Something went wrong. Try again."
+            });
+        }
+    });
+});
+
+
+
+
+// add treatment plan modal ajax 
+
+document.getElementById("treatmentPlanForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    let formData = new FormData(this);
+
+    fetch("add_treatment.php", {
+        method: "POST",
+        body: formData
+    })
+    .then(res => res.text())
+    .then(data => {
+
+        console.log("SERVER:", data);
+
+        if (data.trim() === "success") {
+            Swal.fire({
+                icon: "success",
+                title: "Saved!",
+                text: "Treatment plan added successfully.",
+                timer: 1500,
+                showConfirmButton: false
+            });
+
+            let modalEl = document.getElementById("treatmentPlanModal");
+            let modal = bootstrap.Modal.getInstance(modalEl);
+            modal.hide();
+
+            document.getElementById("treatmentPlanForm").reset();
+
+        } else {
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: data
+            });
+        }
+    });
+});
+
+
+// add workdone dropdown ajax 
+
+
+document.getElementById("workDoneForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    let formData = new FormData(this);
+
+    fetch("add_work_done.php", {
+        method: "POST",
+        body: formData
+    })
+    .then(res => res.text())
+    .then(data => {
+
+        console.log("SERVER:", data);
+
+        if (data.trim() === "success") {
+            Swal.fire({
+                icon: "success",
+                title: "Saved!",
+                text: "Work done added successfully.",
+                timer: 1500,
+                showConfirmButton: false
+            });
+
+            let modalEl = document.getElementById("workDoneModal");
+            let modal = bootstrap.Modal.getInstance(modalEl);
+            modal.hide();
+
+            document.getElementById("workDoneForm").reset();
+
+        } else {
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: data
+            });
+        }
+    });
+});
+
+
+
+function filterPatients() {
+    let input = document.getElementById("patientSearch").value.toLowerCase();
+    let rows = document.querySelectorAll("table tbody tr");
+
+    rows.forEach(row => {
+        let pid = row.children[0].innerText.toLowerCase(); // patient ID
+        let pname = row.children[1].innerText.toLowerCase(); // patient name
+
+        if (pid.includes(input) || pname.includes(input)) {
+            row.style.display = "";
+        } else {
+            row.style.display = "none";
+        }
+    });
+}
+
+function searchPatients() {
+    const input = document.getElementById("patientSearch").value.toLowerCase();
+    const rows = document.querySelectorAll("#patientTableBody tr");
+
+    // If input is empty → restore original table (20 rows)
+    if (input.trim() === "") {
+
+        rows.forEach((row, index) => {
+            if (row.dataset.extra === "1") {
+                row.classList.add("d-none");   // hide extra rows
+            } else {
+                row.classList.remove("d-none"); // show original rows
+            }
+        });
+
+        return;
+    }
+
+    // Searching → show matching rows only
+    rows.forEach(row => {
+        const pid = row.children[0].innerText.toLowerCase();
+        const name = row.children[1].innerText.toLowerCase();
+
+        if (pid.includes(input) || name.includes(input)) {
+            row.classList.remove("d-none");
+        } else {
+            row.classList.add("d-none");
+        }
+    });
+}
+
+
+
+
+// ================================
+// LOAD PATIENT DATA BY patient_uid
+// ================================
+function loadPatientData(patient_uid) {
+
+    fetch("get_patient.php?patient_uid=" + patient_uid)
+    .then(r => r.json())
+    .then(data => {
+
+        document.getElementById("update_uid").value = data.patient_uid;
+        document.getElementById("update_patient_uid").value = data.patient_uid;
+        document.getElementById("update_name").value = data.name;
+        document.getElementById("update_age").value = data.age;
+        document.getElementById("update_contact").value = data.contact_number;
+        document.getElementById("update_address").value = data.address;
+        document.getElementById("update_date").value = data.date_of_visit;
+        document.getElementById("update_notes").value = data.notes;
+        document.getElementById("update_xray").value = data.xray_remark;
+        document.getElementById("update_chief").value = data.chief_complain;
+        document.getElementById("update_medical").value = data.medical_history;
+        document.getElementById("update_oral").value = data.oral_diet_habit;
+        document.getElementById("update_family").value = data.family_history;
+        document.getElementById("update_visit").value = data.total_visit;
+        document.getElementById("update_total_amount").value = data.total_amount;
+        document.getElementById("update_paystatus").value = data.payment_status;
+        document.getElementById("update_pending").value = data.payment_pending;
+
+    });
+}
+
+// ================================
+// UPDATE PATIENT AJAX SUBMIT
+// ================================
+document.getElementById("updatePatientForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    let formData = new FormData(this);
+
+    fetch("update_patient.php", {
+        method: "POST",
+        body: formData
+    })
+    .then(r => r.text())
+    .then(data => {
+
+        if (data.trim() === "success") {
+
+            Swal.fire({
+                icon: "success",
+                title: "Updated!",
+                text: "Patient record updated successfully.",
+                timer: 1500,
+                showConfirmButton: false
+            });
+
+            let modal = bootstrap.Modal.getInstance(document.getElementById("updatePatientModal"));
+            modal.hide();
+
+            setTimeout(() => location.reload(), 1500);
+        }
+        else {
+            Swal.fire({ icon: "error", title: "Error", text: data });
+        }
+    });
+});
+
+
+
+
+
+
+// ================================
+// add priscription modal 
+// ================================
+
+
+function setPrescriptionPatient(uid, name) {
+    document.getElementById("pres_patient_uid").value = uid;
+    document.getElementById("pres_patient_name").value = name;
+    document.getElementById("show_patient_uid").value = uid;
+    document.getElementById("show_patient_name").value = name;
+}
+document.getElementById('prescriptionModal')
+  .addEventListener('shown.bs.modal', function () {
+
+    document.getElementById("prescriptionTableBody").innerHTML = "";
+    addPrescriptionRow();
+});
+
+
+function addPrescriptionRow() {
+
+    let row = `
+    <tr>
+
+      <!-- Drug (SEARCHABLE) -->
+      <td>
+        <select name="drug_id[]" class="form-select drug-select" required>
+          <option value="">Select Drug</option>
+          <?= $drugOptions ?>
+        </select>
+      </td>
+
+      <td>
+        <select name="dose_id[]" class="form-select" required>
+          <option value="">Dose</option>
+          <?= $doseOptions ?>
+        </select>
+      </td>
+
+      <td>
+        <select name="form_id[]" class="form-select" required>
+          <option value="">Form</option>
+          <?= $formOptions ?>
+        </select>
+      </td>
+
+      <td>
+        <select name="duration_id[]" class="form-select" required>
+          <option value="">Duration</option>
+          <?= $durationOptions ?>
+        </select>
+      </td>
+
+      <td>
+        <select name="quantity_id[]" class="form-select" required>
+          <option value="">No</option>
+          <?= $quantityOptions ?>
+        </select>
+      </td>
+
+      <td>
+        <input type="number" name="days[]" class="form-control form-control-sm"
+               min="1" required>
+      </td>
+
+      <td>
+        <select name="suggestion_id[]" class="form-select" required>
+          <option value="">Suggest</option>
+          <?= $suggestOptions ?>
+        </select>
+      </td>
+
+      <td>
+        <input type="text" name="total[]" class="form-control form-control-sm" required>
+      </td>
+
+      <td>
+        <button type="button" class="btn btn-danger btn-sm"
+                onclick="this.closest('tr').remove()">✖</button>
+      </td>
+
+    </tr>
+    `;
+
+    document.getElementById("prescriptionTableBody")
+            .insertAdjacentHTML("beforeend", row);
+
+    // 🔥 Initialize Select2 for newly added row
+    $('.drug-select').select2({
+        dropdownParent: $('#prescriptionModal'),
+        width: '100%',
+        placeholder: "Search drug"
+    });
+}
+
+
+
+
+
+
+// document.getElementById("prescriptionForm").addEventListener("submit", function(e) {
+//     e.preventDefault();
+
+//     if (document.querySelectorAll("#prescriptionTableBody tr").length === 0) {
+//         Swal.fire("Error", "Please add at least one drug", "error");
+//         return;
+//     }
+
+//     fetch("save_prescription.php", {
+//         method: "POST",
+//         body: new FormData(this)
+//     })
+//     .then(res => res.json())
+//     .then(resp => {
+//         if (resp.status === "success") {
+//             Swal.fire({
+//                 icon: "success",
+//                 title: "Saved",
+//                 text: "Prescription added",
+//                 timer: 1000,
+//                 showConfirmButton: false
+//             });
+
+//             bootstrap.Modal
+//               .getInstance(document.getElementById("prescriptionModal"))
+//               .hide();
+//         } else {
+//             Swal.fire("Error", resp.message, "error");
+//         }
+//     });
+// });
+
+
+
+let saveMode = "save"; // default
+
+// Save & Print button click
+// SAVE & PRINT
+document.getElementById("saveAndPrintBtn").addEventListener("click", function () {
+    document.getElementById("save_mode").value = "print";
+    submitPrescription();
+});
+
+// NORMAL SAVE (form submit)
+document.getElementById("prescriptionForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+    document.getElementById("save_mode").value = "save";
+    submitPrescription();
+});
+
+
+
+
+   function submitPrescription() {
+
+    if (document.querySelectorAll("#prescriptionTableBody tr").length === 0) {
+        Swal.fire("Error", "Please add at least one drug", "error");
+        return;
+    }
+
+    let form = document.getElementById("prescriptionForm");
+    let formData = new FormData(form);
+
+    fetch("save_prescription.php", {
+        method: "POST",
+        body: formData
+    })
+    .then(res => res.json())
+    .then(resp => {
+
+        console.log("SERVER RESPONSE:", resp); // 🔴 keep for debug
+
+        if (resp.status === "success") {
+
+            Swal.fire({
+                icon: "success",
+                title: "Saved",
+                timer: 1000,
+                showConfirmButton: false
+            });
+
+            // 🔥 PRINT ONLY WHEN REQUIRED
+            if (formData.get("save_mode") === "print") {
+
+                // MUST be direct open (browser-safe)
+                window.location.href =
+                    "print_prescription.php?id=" + resp.prescription_id;
+            }
+
+            bootstrap.Modal
+              .getInstance(document.getElementById("prescriptionModal"))
+              .hide();
+
+            form.reset();
+
+        } else {
+            Swal.fire("Error", resp.message, "error");
+        }
+    })
+    .catch(err => {
+        Swal.fire("Error", "AJAX failed", "error");
+        console.error(err);
+    });
+}
+
+
+
+// ================================
+// Work done 
+// ================================
+
+
+function setWorkPatient(uid, name) {
+    document.getElementById("work_patient_uid").value = uid;
+    document.getElementById("work_patient_name").value = name;
+
+    document.getElementById("show_work_patient_uid").value = uid;
+    document.getElementById("show_work_patient_name").value = name;
+}
+
+
+$('#patientWorkModal').on('shown.bs.modal', function () {
+    $('.work-done-select').select2({
+        dropdownParent: $('#patientWorkModal'),
+        width: '100%',
+        placeholder: 'Search work done'
+    });
+});
+
+document.getElementById("patientWorkForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    fetch("add_patient_work_done.php", {
+        method: "POST",
+        body: new FormData(this)
+    })
+    .then(res => res.json())
+    .then(resp => {
+
+        if (resp.status === "success") {
+            Swal.fire({
+                icon: "success",
+                title: "Saved",
+                text: "Work done added successfully",
+                timer: 1500,
+                showConfirmButton: false
+            });
+
+            bootstrap.Modal
+              .getInstance(document.getElementById("patientWorkModal"))
+              .hide();
+
+            this.reset();
+
+        } else {
+            Swal.fire("Error", resp.message, "error");
+        }
+    });
+});
+
+
+
+
+
+// ================================
+// Case Print (same pattern as prescription)
+// ================================
+function printCase(patient_uid) {
+    // MUST be direct open (browser-safe)
+    window.location.href =
+        "print_case_detail.php?patient_uid=" + encodeURIComponent(patient_uid);
+}
+
+
+
+
+
+
+// ================================
+// Treatment 
+// ================================
+
+const treatmentModal = document.getElementById('treatmentPlanModal2');
+
+treatmentModal.addEventListener('show.bs.modal', function (event) {
+
+    const button = event.relatedTarget;
+
+    const uid  = button.getAttribute('data-uid');
+    const name = button.getAttribute('data-name');
+
+    // Fill modal fields
+    document.getElementById('treat_uid').value = uid;
+    document.getElementById('show_treat_uid').value = uid;
+    document.getElementById('show_treat_name').value = name;
+});
+
+
+
+const toothData = {
+  ur: new Set(),
+  ul: new Set(),
+  lr: new Set(),
+  ll: new Set()
+};
+
+document.querySelectorAll('.tooth').forEach(t => {
+  t.addEventListener('click', () => {
+    const q = t.dataset.q;
+    const n = t.dataset.tooth;
+
+    t.classList.toggle('active');
+
+    toothData[q].has(n)
+      ? toothData[q].delete(n)
+      : toothData[q].add(n);
+
+    document.getElementById(q).value =
+      [...toothData[q]].join(',');
+  });
+});
+
+
+$('#treatmentPlanModal2').on('shown.bs.modal', function () {
+
+    $('.select-diagnosis').select2({
+        dropdownParent: $('#treatmentPlanModal2'),
+        width: '100%',
+        placeholder: 'Search diagnosis'
+    });
+
+    $('.select-treatment').select2({
+        dropdownParent: $('#treatmentPlanModal2'),
+        width: '100%',
+        placeholder: 'Search treatment'
+    });
+
+});
+
+
+
+
+
+document.getElementById("treatmentPatientForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const form = this;
+    const formData = new FormData(form);
+
+    fetch("save_patient_treatment.php", {
+        method: "POST",
+        body: formData
+    })
+    .then(res => res.text())
+    .then(data => {
+        console.log("SERVER:", data);
+
+        if (data.trim() === "success") {
+
+            Swal.fire({
+                icon: "success",
+                title: "Saved!",
+                text: "Treatment saved successfully",
+                timer: 1500,
+                showConfirmButton: false
+            });
+
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(
+                document.getElementById("treatmentPlanModal2")
+            );
+            modal.hide();
+
+            // Reset form
+            form.reset();
+
+            // Clear selected teeth UI
+            document.querySelectorAll('.tooth.active')
+                .forEach(t => t.classList.remove('active'));
+
+            // Clear hidden tooth inputs
+            ['ur','ul','lr','ll'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+
+        } else {
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: data || "Failed to save treatment"
+            });
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        Swal.fire({
+            icon: "error",
+            title: "AJAX Error",
+            text: "Something went wrong"
+        });
+    });
+});
+
+
+
+
+
+// GENERATE CERTIFICATE 
+
+
+function setCertificatePatient(uid, name) {
+    document.getElementById("cert_patient_uid").value = uid;
+    document.getElementById("cert_patient_name").value = name;
+
+    document.getElementById("show_cert_patient_uid").value = uid;
+    document.getElementById("show_cert_patient_name").value = name;
+}
+
+
+
+document.getElementById("certificateForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const form = this;
+    const formData = new FormData(form);
+
+    fetch("save_certificate.php", {
+        method: "POST",
+        body: formData
+    })
+    .then(res => res.json())   // ✅ now JSON is valid
+    .then(resp => {
+
+        if (resp.status === "success") {
+
+            Swal.fire({
+                icon: "success",
+                title: "Certificate Generated",
+                timer: 1000,
+                showConfirmButton: false
+            });
+            // 🔥 CLOSE MODAL FIRST
+    const modalEl = document.getElementById("certificateModal");
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    if (modal) modal.hide();
+            // 🔥 OPEN PDF (NOT AJAX)
+            window.location.href =
+                "generate_certificate_pdf.php?id=" + resp.certificate_id;
+
+        } else {
+            Swal.fire("Error", resp.message || "Failed", "error");
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        Swal.fire("Error", "AJAX failed", "error");
+    });
+});
+
+const certModal = document.getElementById('certificateModal');
+
+certModal.addEventListener('show.bs.modal', function () {
+
+    // Reset full form (clears textarea values)
+    document.getElementById('certificateForm').reset();
+
+    // Clear visible fields
+    document.getElementById('show_cert_patient_uid').value = '';
+    document.getElementById('show_cert_patient_name').value = '';
+
+    // Clear hidden fields
+    document.getElementById('cert_patient_uid').value = '';
+    document.getElementById('cert_patient_name').value = '';
+});
+
+
+</script>
+
+
+
+
+</body>
+</html>

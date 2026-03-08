@@ -1,0 +1,96 @@
+# Clinic Management System - Apache Configuration
+# Security and Optimization Settings
+
+# Enable Rewrite Engine
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /clinic_management/
+    
+    # Redirect to login if accessing root
+    RewriteCond %{REQUEST_URI} ^/clinic_management/?$
+    RewriteRule ^(.*)$ public/login.php [L,R=302]
+    
+    # Prevent access to sensitive files
+    RewriteRule ^(config|core|includes)/.*$ - [F,L]
+</IfModule>
+
+# Prevent Directory Listing
+Options -Indexes
+
+# Security Headers
+<IfModule mod_headers.c>
+    # Prevent clickjacking
+    Header set X-Frame-Options "SAMEORIGIN"
+    
+    # Prevent MIME type sniffing
+    Header set X-Content-Type-Options "nosniff"
+    
+    # Enable XSS protection
+    Header set X-XSS-Protection "1; mode=block"
+    
+    # Hide PHP version
+    Header unset X-Powered-By
+    
+    # Referrer policy
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# Block Access to Sensitive Files
+<FilesMatch "(^\.env|^\.git|\.sql$|\.md$|migrate\.php|INSTALLATION\.md|\.bak$)">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Block access to config directory via Files directive
+<Files "config/*">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# PHP Security Settings
+<IfModule mod_php7.c>
+    php_flag display_errors Off
+    php_flag log_errors On
+    php_value error_log logs/php_errors.log
+</IfModule>
+
+# Compression
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/css text/javascript application/javascript application/json
+</IfModule>
+
+# Browser Caching
+<IfModule mod_expires.c>
+    ExpiresActive On
+    
+    # Images
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+    
+    # CSS and JavaScript
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    
+    # HTML
+    ExpiresByType text/html "access plus 0 seconds"
+</IfModule>
+
+# Charset
+AddDefaultCharset UTF-8
+
+# Upload Size Limits
+php_value upload_max_filesize 5M
+php_value post_max_size 10M
+
+# Session Settings
+php_value session.cookie_httponly 1
+php_value session.use_only_cookies 1
+# Uncomment for HTTPS
+# php_value session.cookie_secure 1
+
+# Error Pages (Optional)
+# ErrorDocument 404 /clinic_management/public/404.php
+# ErrorDocument 403 /clinic_management/public/403.php
+# ErrorDocument 500 /clinic_management/public/500.php
