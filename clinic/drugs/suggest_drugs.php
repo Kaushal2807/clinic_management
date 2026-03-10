@@ -14,11 +14,13 @@ ClinicContext::init();
 $pageTitle = 'Drug Suggestions';
 $clinic = ClinicContext::getClinicInfo();
 $conn = ClinicContext::getConnection();
+$clinicId = ClinicContext::getClinicId();
 
 // Get recently added medicines
 $recentMedicines = $conn->query("
     SELECT medicine_name, composition, category, quantity, created_at
     FROM medicine
+    WHERE clinic_id = $clinicId
     ORDER BY created_at DESC
     LIMIT 10
 ");
@@ -26,7 +28,7 @@ $recentMedicines = $conn->query("
 // Get low stock medicines
 $lowStock = $conn->query("
     SELECT * FROM medicine 
-    WHERE quantity < 20 
+    WHERE clinic_id = $clinicId AND quantity < 20 
     ORDER BY quantity ASC
 ");
 
@@ -34,14 +36,14 @@ $lowStock = $conn->query("
 $byCategory = $conn->query("
     SELECT category, COUNT(*) as count 
     FROM medicine 
-    WHERE category IS NOT NULL AND category != ''
+    WHERE clinic_id = $clinicId AND category IS NOT NULL AND category != ''
     GROUP BY category 
     ORDER BY count DESC
 ");
 
 // Get total inventory stats
-$totalMeds = $conn->query("SELECT COUNT(*) as total FROM medicine")->fetch_assoc()['total'];
-$totalStock = $conn->query("SELECT SUM(quantity) as total FROM medicine")->fetch_assoc()['total'] ?? 0;
+$totalMeds = $conn->query("SELECT COUNT(*) as total FROM medicine WHERE clinic_id = $clinicId")->fetch_assoc()['total'];
+$totalStock = $conn->query("SELECT SUM(quantity) as total FROM medicine WHERE clinic_id = $clinicId")->fetch_assoc()['total'] ?? 0;
 
 include __DIR__ . '/../../includes/clinic_header.php';
 ?>

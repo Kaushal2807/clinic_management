@@ -24,11 +24,13 @@ try {
     $quantity = (int)($_POST['quantity'] ?? 0);
     $description = trim($_POST['description'] ?? '');
     
-    $sql = "INSERT INTO medicine (medicine_name, composition, category, quantity, description, created_at) 
-            VALUES (?, ?, ?, ?, ?, NOW())";
+    $clinicId = ClinicContext::getClinicId();
+    
+    $sql = "INSERT INTO medicine (clinic_id, medicine_name, composition, category, quantity, description, created_at) 
+            VALUES (?, ?, ?, ?, ?, ?, NOW())";
     
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param('sssis', $drug_name, $composition, $category, $quantity, $description);
+    $stmt->bind_param('isssis', $clinicId, $drug_name, $composition, $category, $quantity, $description);
     
     if ($stmt->execute()) {
         echo json_encode(['success' => true, 'message' => 'Medicine added successfully', 'id' => $stmt->insert_id]);

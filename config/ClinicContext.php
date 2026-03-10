@@ -1,18 +1,18 @@
 <?php
 /**
  * Clinic Context Manager
- * Handles switching between clinic databases and managing clinic-specific operations
+ * Handles switching to clinic_data database and managing clinic-specific operations
+ * All data isolation is done via clinic_id WHERE clauses
  */
 
 require_once __DIR__ . '/database.php';
 require_once __DIR__ . '/../core/Session.php';
 
 class ClinicContext {
-    private static $currentDatabase = null;
     private static $clinicInfo = null;
     
     /**
-     * Initialize clinic context and switch to clinic database
+     * Initialize clinic context and switch to clinic_data database
      */
     public static function init() {
         if (!Session::isClinic()) {
@@ -26,9 +26,9 @@ class ClinicContext {
         
         $db = Database::getInstance();
         
-        // Get clinic information
+        // Get clinic information from master
         $stmt = $db->getConnection()->prepare(
-            "SELECT id, clinic_name, database_name, logo_path, contact_email, contact_phone, address 
+            "SELECT id, clinic_name, clinic_prefix, logo_path, contact_email, contact_phone, address 
              FROM clinics WHERE id = ? AND is_active = 1"
         );
         $stmt->bind_param('i', $clinicId);
@@ -40,9 +40,8 @@ class ClinicContext {
             return false;
         }
         
-        // Switch to clinic database
-        $db->switchDatabase($clinic['database_name']);
-        self::$currentDatabase = $clinic['database_name'];
+        // Switch to clinic_data database (shared for all clinics)
+        $db->switchToClinicData();
         self::$clinicInfo = $clinic;
         
         // Store clinic info in session for easy access
@@ -62,18 +61,26 @@ class ClinicContext {
     }
     
     /**
-     * Get clinic database connection
+     * Get clinic database connection (already switched to clinic_data)
      */
     public static function getConnection() {
         return Database::getInstance()->getConnection();
     }
     
     /**
-     * Get clinic ID
+     * Get clinic ID for WHERE clause filtering
      */
     public static function getClinicId() {
         $info = self::getClinicInfo();
         return $info['id'] ?? null;
+    }
+    
+    /**
+     * Get clinic prefix for patient UID generation
+     */
+    public static function getClinicPrefix() {
+        $info = self::getClinicInfo();
+        return $info['clinic_prefix'] ?? '';
     }
     
     /**

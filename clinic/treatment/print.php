@@ -14,6 +14,7 @@ ClinicContext::init();
 
 $clinic = ClinicContext::getClinicInfo();
 $conn = ClinicContext::getConnection();
+$clinicId = ClinicContext::getClinicId();
 
 if (!isset($_GET['patient_uid']) || empty($_GET['patient_uid'])) {
     die("Patient UID is required");
@@ -22,14 +23,20 @@ if (!isset($_GET['patient_uid']) || empty($_GET['patient_uid'])) {
 $patient_uid = $_GET['patient_uid'];
 
 // Get patient details
-$patient = $conn->query("SELECT * FROM patients WHERE patient_uid = '$patient_uid' LIMIT 1")->fetch_assoc();
+$stmt = $conn->prepare("SELECT * FROM patients WHERE patient_uid = ? AND clinic_id = ?");
+$stmt->bind_param('si', $patient_uid, $clinicId);
+$stmt->execute();
+$patient = $stmt->get_result()->fetch_assoc();
 
 if (!$patient) {
     die("Patient not found");
 }
 
 // Get treatments
-$treatments = $conn->query("SELECT * FROM treatments WHERE patient_id = (SELECT id FROM patients WHERE patient_uid = '$patient_uid') ORDER BY treatment_date DESC");
+$s = $conn->prepare("SELECT * FROM treatments WHERE clinic_id = ? AND patient_id = ? ORDER BY treatment_date DESC");
+$s->bind_param('ii', $clinicId, $patient['id']);
+$s->execute();
+$treatments = $s->get_result();
 
 // Create PDF
 $pdf = new PDFHelper($clinic, 'P', 'mm', 'A4');

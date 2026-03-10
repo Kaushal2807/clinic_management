@@ -294,15 +294,15 @@ if ($step === 2 && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="step-number">2</div>
                     <div class="step-content">
                         <h3>What Will Be Created</h3>
-                        <p>Master database + Demo clinic with sample data</p>
+                        <p>Master database (clinic_master) + Data database (clinic_data)</p>
                     </div>
                 </div>
                 
                 <div class="step">
                     <div class="step-number">3</div>
                     <div class="step-content">
-                        <h3>Default Accounts</h3>
-                        <p>Admin and demo clinic accounts will be created</p>
+                        <h3>Default Account</h3>
+                        <p>Admin account will be created for central management</p>
                     </div>
                 </div>
                 
@@ -323,13 +323,13 @@ if ($step === 2 && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 <h2 style="color: #333; margin-bottom: 20px; text-align: center;">Installation Successful!</h2>
                 
                 <div class="alert alert-success">
-                    <strong>✓ Database Created:</strong> clinic_management_master<br>
-                    <strong>✓ Demo Clinic Created:</strong> clinic_demo_dental<br>
+                    <strong>✓ Master Database Created:</strong> clinic_master<br>
+                    <strong>✓ Data Database Created:</strong> clinic_data<br>
                     <strong>✓ Queries Executed:</strong> <?= isset($_GET['executed']) ? (int)$_GET['executed'] : 'N/A' ?>
                 </div>
                 
                 <div class="credentials">
-                    <h4>📋 Login Credentials</h4>
+                    <h4>📋 Admin Login Credentials</h4>
                     
                     <div class="cred-item">
                         <span class="cred-label">Admin Email:</span>
@@ -338,17 +338,6 @@ if ($step === 2 && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="cred-item">
                         <span class="cred-label">Admin Password:</span>
                         <span class="cred-value">admin123</span>
-                    </div>
-                    
-                    <div style="height: 15px;"></div>
-                    
-                    <div class="cred-item">
-                        <span class="cred-label">Demo Clinic Email:</span>
-                        <span class="cred-value">demo@clinic.com</span>
-                    </div>
-                    <div class="cred-item">
-                        <span class="cred-label">Demo Clinic Password:</span>
-                        <span class="cred-value">clinic123</span>
                     </div>
                 </div>
                 
@@ -365,10 +354,10 @@ if ($step === 2 && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     <h4 style="color: #333; margin-bottom: 15px;">📝 Next Steps:</h4>
                     <ol style="color: #666; line-height: 2;">
                         <li>Login with admin credentials</li>
-                        <li>Change default passwords</li>
-                        <li>Create your own clinic</li>
-                        <li>Upload clinic logo</li>
-                        <li>Start managing patients</li>
+                        <li>Change default admin password</li>
+                        <li>Create your first clinic (set clinic name & prefix)</li>
+                        <li>Add users for the clinic</li>
+                        <li>Login as clinic user and start managing patients</li>
                     </ol>
                 </div>
                 

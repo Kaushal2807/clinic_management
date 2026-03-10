@@ -12,8 +12,9 @@ ClinicContext::init();
 
 $pageTitle = 'Expense Categories';
 $conn = ClinicContext::getConnection();
+$clinicId = ClinicContext::getClinicId();
 
-$categories = $conn->query("SELECT * FROM expense_categories ORDER BY category_name");
+$categories = $conn->query("SELECT * FROM expense_categories WHERE clinic_id = $clinicId ORDER BY category_name");
 
 include __DIR__ . '/../../includes/clinic_header.php';
 ?>

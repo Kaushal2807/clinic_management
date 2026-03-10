@@ -21,8 +21,9 @@ try {
     }
 
     $conn = ClinicContext::getConnection();
-    $stmt = $conn->prepare("INSERT INTO expense_categories (category_name) VALUES (?)");
-    $stmt->bind_param("s", $category_name);
+    $clinicId = ClinicContext::getClinicId();
+    $stmt = $conn->prepare("INSERT INTO expense_categories (clinic_id, category_name) VALUES (?, ?)");
+    $stmt->bind_param("is", $clinicId, $category_name);
     
     if ($stmt->execute()) {
         echo json_encode([

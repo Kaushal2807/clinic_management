@@ -19,9 +19,11 @@ try {
         throw new Exception('Invalid dose ID');
     }
     
-    $sql = "DELETE FROM doses WHERE id = ?";
+    $clinicId = ClinicContext::getClinicId();
+    
+    $sql = "DELETE FROM doses WHERE id = ? AND clinic_id = ?";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param('i', $id);
+    $stmt->bind_param('ii', $id, $clinicId);
     
     if ($stmt->execute()) {
         echo json_encode(['success' => true, 'message' => 'Dose deleted successfully']);

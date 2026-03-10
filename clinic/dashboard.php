@@ -12,27 +12,48 @@ Auth::requireClinic();
 $clinicId = Session::getClinicId();
 $db = Database::getInstance();
 
-// Get clinic information
-$stmt = $db->query("SELECT * FROM clinics WHERE id = ?", [$clinicId], 'i');
+// Get clinic information from master
+$stmt = $db->getConnection()->prepare("SELECT * FROM clinics WHERE id = ?");
+$stmt->bind_param('i', $clinicId);
+$stmt->execute();
 $clinic = $stmt->get_result()->fetch_assoc();
 
 if (!$clinic) {
     die("Clinic not found");
 }
 
-// Switch to clinic database
-$db->switchDatabase($clinic['database_name']);
+// Switch to clinic data database
+$db->switchToClinicData();
 $conn = $db->getConnection();
 
 // Get statistics
 $stats = [];
-$stats['total_patients'] = $conn->query("SELECT COUNT(*) as count FROM patients")->fetch_assoc()['count'] ?? 0;
-$stats['today_patients'] = $conn->query("SELECT COUNT(*) as count FROM patients WHERE DATE(date_of_visit) = CURDATE()")->fetch_assoc()['count'] ?? 0;
-$stats['pending_payments'] = $conn->query("SELECT COUNT(*) as count FROM patients WHERE payment_status != 'paid'")->fetch_assoc()['count'] ?? 0;
-$stats['total_revenue'] = $conn->query("SELECT SUM(total_amount) as total FROM patients")->fetch_assoc()['total'] ?? 0;
+
+$s = $conn->prepare("SELECT COUNT(*) as count FROM patients WHERE clinic_id = ?");
+$s->bind_param('i', $clinicId);
+$s->execute();
+$stats['total_patients'] = $s->get_result()->fetch_assoc()['count'] ?? 0;
+
+$s = $conn->prepare("SELECT COUNT(*) as count FROM patients WHERE clinic_id = ? AND DATE(date_of_visit) = CURDATE()");
+$s->bind_param('i', $clinicId);
+$s->execute();
+$stats['today_patients'] = $s->get_result()->fetch_assoc()['count'] ?? 0;
+
+$s = $conn->prepare("SELECT COUNT(*) as count FROM patients WHERE clinic_id = ? AND payment_status != 'paid'");
+$s->bind_param('i', $clinicId);
+$s->execute();
+$stats['pending_payments'] = $s->get_result()->fetch_assoc()['count'] ?? 0;
+
+$s = $conn->prepare("SELECT SUM(total_amount) as total FROM patients WHERE clinic_id = ?");
+$s->bind_param('i', $clinicId);
+$s->execute();
+$stats['total_revenue'] = $s->get_result()->fetch_assoc()['total'] ?? 0;
 
 // Recent patients
-$recentPatients = $conn->query("SELECT * FROM patients ORDER BY date_of_visit DESC, created_at DESC LIMIT 10");
+$s = $conn->prepare("SELECT * FROM patients WHERE clinic_id = ? ORDER BY date_of_visit DESC, created_at DESC LIMIT 10");
+$s->bind_param('i', $clinicId);
+$s->execute();
+$recentPatients = $s->get_result();
 
 // Switch back to master database
 $db->switchToMaster();

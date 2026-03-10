@@ -13,6 +13,7 @@ header('Content-Type: application/json');
 
 try {
     $conn = ClinicContext::getConnection();
+    $clinicId = ClinicContext::getClinicId();
     
     $data = json_decode(file_get_contents('php://input'), true);
     $id = (int)($data['id'] ?? 0);
@@ -21,8 +22,8 @@ try {
         throw new Exception('Invalid treatment ID');
     }
     
-    $stmt = $conn->prepare("DELETE FROM treatments WHERE id = ?");
-    $stmt->bind_param('i', $id);
+    $stmt = $conn->prepare("DELETE FROM treatments WHERE id = ? AND clinic_id = ?");
+    $stmt->bind_param('ii', $id, $clinicId);
     
     if ($stmt->execute()) {
         echo json_encode(['success' => true, 'message' => 'Treatment deleted successfully']);

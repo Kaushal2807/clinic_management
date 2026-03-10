@@ -26,10 +26,12 @@ try {
     $quantity = (int)($_POST['quantity'] ?? 0);
     $description = trim($_POST['description'] ?? '');
     
-    $sql = "UPDATE medicine SET medicine_name = ?, composition = ?, category = ?, quantity = ?, description = ? WHERE id = ?";
+    $clinicId = ClinicContext::getClinicId();
+    
+    $sql = "UPDATE medicine SET medicine_name = ?, composition = ?, category = ?, quantity = ?, description = ? WHERE id = ? AND clinic_id = ?";
     
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param('sssisi', $drug_name, $composition, $category, $quantity, $description, $id);
+    $stmt->bind_param('sssisii', $drug_name, $composition, $category, $quantity, $description, $id, $clinicId);
     
     if ($stmt->execute()) {
         echo json_encode(['success' => true, 'message' => 'Medicine updated successfully']);

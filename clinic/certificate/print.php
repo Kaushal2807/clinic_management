@@ -14,6 +14,7 @@ ClinicContext::init();
 
 $clinic = ClinicContext::getClinicInfo();
 $conn = ClinicContext::getConnection();
+$clinicId = ClinicContext::getClinicId();
 
 if (!isset($_GET['id']) || empty($_GET['id'])) {
     die("Certificate ID is required");
@@ -22,8 +23,8 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 $certId = (int)$_GET['id'];
 
 // Get certificate details
-$stmt = $conn->prepare("SELECT * FROM certificates WHERE id = ?");
-$stmt->bind_param("i", $certId);
+$stmt = $conn->prepare("SELECT * FROM certificates WHERE id = ? AND clinic_id = ?");
+$stmt->bind_param("ii", $certId, $clinicId);
 $stmt->execute();
 $cert = $stmt->get_result()->fetch_assoc();
 

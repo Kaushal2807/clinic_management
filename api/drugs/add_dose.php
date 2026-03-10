@@ -19,9 +19,11 @@ try {
         throw new Exception('Dose name is required');
     }
     
-    $sql = "INSERT INTO doses (dose_name, created_at) VALUES (?, NOW())";
+    $clinicId = ClinicContext::getClinicId();
+    
+    $sql = "INSERT INTO doses (clinic_id, dose_name, created_at) VALUES (?, ?, NOW())";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param('s', $dose_name);
+    $stmt->bind_param('is', $clinicId, $dose_name);
     
     if ($stmt->execute()) {
         echo json_encode(['success' => true, 'message' => 'Dose added successfully']);

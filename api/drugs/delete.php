@@ -21,9 +21,11 @@ try {
         throw new Exception('Invalid medicine ID');
     }
     
-    $sql = "DELETE FROM medicine WHERE id = ?";
+    $clinicId = ClinicContext::getClinicId();
+    
+    $sql = "DELETE FROM medicine WHERE id = ? AND clinic_id = ?";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param('i', $id);
+    $stmt->bind_param('ii', $id, $clinicId);
     
     if ($stmt->execute()) {
         echo json_encode(['success' => true, 'message' => 'Medicine deleted successfully']);

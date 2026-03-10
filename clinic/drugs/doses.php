@@ -14,9 +14,10 @@ ClinicContext::init();
 $pageTitle = 'Manage Doses';
 $clinic = ClinicContext::getClinicInfo();
 $conn = ClinicContext::getConnection();
+$clinicId = ClinicContext::getClinicId();
 
 // Fetch all doses
-$doses = $conn->query("SELECT * FROM doses ORDER BY dose_name ASC");
+$doses = $conn->query("SELECT * FROM doses WHERE clinic_id = $clinicId ORDER BY dose_name ASC");
 
 include __DIR__ . '/../../includes/clinic_header.php';
 ?>

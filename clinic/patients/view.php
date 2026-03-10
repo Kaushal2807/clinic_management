@@ -14,6 +14,7 @@ ClinicContext::init();
 $pageTitle = 'Patient Details';
 $clinic = ClinicContext::getClinicInfo();
 $conn = ClinicContext::getConnection();
+$clinicId = ClinicContext::getClinicId();
 
 if (!isset($_GET['patient_uid']) || empty($_GET['patient_uid'])) {
     header('Location: index.php');
@@ -23,8 +24,8 @@ if (!isset($_GET['patient_uid']) || empty($_GET['patient_uid'])) {
 $patient_uid = $_GET['patient_uid'];
 
 // Get patient details
-$stmt = $conn->prepare("SELECT * FROM patients WHERE patient_uid = ?");
-$stmt->bind_param("s", $patient_uid);
+$stmt = $conn->prepare("SELECT * FROM patients WHERE patient_uid = ? AND clinic_id = ?");
+$stmt->bind_param("si", $patient_uid, $clinicId);
 $stmt->execute();
 $patient = $stmt->get_result()->fetch_assoc();
 
@@ -33,14 +34,25 @@ if (!$patient) {
     exit;
 }
 
+$patientId = $patient['id'];
+
 // Get prescriptions count
-$rxCount = $conn->query("SELECT COUNT(*) as count FROM prescriptions WHERE patient_id = (SELECT id FROM patients WHERE patient_uid = '$patient_uid')")->fetch_assoc()['count'];
+$s = $conn->prepare("SELECT COUNT(*) as count FROM prescriptions WHERE clinic_id = ? AND patient_id = ?");
+$s->bind_param('ii', $clinicId, $patientId);
+$s->execute();
+$rxCount = $s->get_result()->fetch_assoc()['count'];
 
 // Get treatments count
-$treatmentCount = $conn->query("SELECT COUNT(*) as count FROM treatments WHERE patient_id = (SELECT id FROM patients WHERE patient_uid = '$patient_uid')")->fetch_assoc()['count'];
+$s = $conn->prepare("SELECT COUNT(*) as count FROM treatments WHERE clinic_id = ? AND patient_id = ?");
+$s->bind_param('ii', $clinicId, $patientId);
+$s->execute();
+$treatmentCount = $s->get_result()->fetch_assoc()['count'];
 
 // Get work done count
-$workCount = $conn->query("SELECT COUNT(*) as count FROM patient_work_done WHERE patient_id = (SELECT id FROM patients WHERE patient_uid = '$patient_uid')")->fetch_assoc()['count'];
+$s = $conn->prepare("SELECT COUNT(*) as count FROM patient_work_done WHERE clinic_id = ? AND patient_id = ?");
+$s->bind_param('ii', $clinicId, $patientId);
+$s->execute();
+$workCount = $s->get_result()->fetch_assoc()['count'];
 
 include __DIR__ . '/../../includes/clinic_header.php';
 ?>

@@ -194,6 +194,18 @@ while ($clinic = $clinics->fetch_assoc()) {
             </button>
         </div>
 
+        <!-- Search Bar -->
+        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4 mb-6">
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400">
+                    <i class="fas fa-search"></i>
+                </span>
+                <input type="text" id="userSearch" 
+                       class="w-full pl-11 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition text-sm"
+                       placeholder="Search by name, email, or clinic..." autocomplete="off">
+            </div>
+        </div>
+
         <!-- Users Table -->
         <div class="bg-white rounded-xl shadow-md overflow-hidden">
             <div class="overflow-x-auto">
@@ -211,7 +223,7 @@ while ($clinic = $clinics->fetch_assoc()) {
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         <?php while ($user = $users->fetch_assoc()): ?>
-                        <tr class="hover:bg-gray-50 transition">
+                        <tr class="hover:bg-gray-50 transition" data-searchable="<?= strtolower(htmlspecialchars($user['full_name'] . ' ' . $user['email'] . ' ' . $user['user_type'] . ' ' . ($user['clinic_name'] ?? ''))) ?>">
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
                                     <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-semibold">
@@ -445,6 +457,29 @@ while ($clinic = $clinics->fetch_assoc()) {
     </form>
 
     <script>
+        // User search filter
+        const userSearch = document.getElementById('userSearch');
+        userSearch.addEventListener('input', function() {
+            const query = this.value.toLowerCase().trim();
+            const rows = document.querySelectorAll('tbody tr[data-searchable]');
+            let visibleCount = 0;
+            rows.forEach(row => {
+                const text = row.getAttribute('data-searchable');
+                const match = !query || text.includes(query);
+                row.style.display = match ? '' : 'none';
+                if (match) visibleCount++;
+            });
+            let noResults = document.getElementById('noSearchResults');
+            if (noResults) noResults.remove();
+            if (visibleCount === 0 && query) {
+                const tbody = document.querySelector('tbody');
+                const tr = document.createElement('tr');
+                tr.id = 'noSearchResults';
+                tr.innerHTML = '<td colspan="7" class="px-6 py-8 text-center text-gray-500">No users match your search.</td>';
+                tbody.appendChild(tr);
+            }
+        });
+
         function openAddModal() {
             document.getElementById('addModal').classList.add('active');
         }

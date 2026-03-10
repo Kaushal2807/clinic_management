@@ -25,9 +25,10 @@ try {
     }
 
     $conn = ClinicContext::getConnection();
-    $stmt = $conn->prepare("INSERT INTO expenses (category, expense_date, description, vendor, amount, created_at) 
-                            VALUES (?, ?, ?, ?, ?, NOW())");
-    $stmt->bind_param("ssssd", $category, $expense_date, $description, $vendor, $amount);
+    $clinicId = ClinicContext::getClinicId();
+    $stmt = $conn->prepare("INSERT INTO expenses (clinic_id, category, expense_date, description, vendor, amount, created_at) 
+                            VALUES (?, ?, ?, ?, ?, ?, NOW())");
+    $stmt->bind_param("issssd", $clinicId, $category, $expense_date, $description, $vendor, $amount);
     
     if ($stmt->execute()) {
         echo json_encode([

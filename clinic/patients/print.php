@@ -14,6 +14,7 @@ ClinicContext::init();
 
 $clinic = ClinicContext::getClinicInfo();
 $conn = ClinicContext::getConnection();
+$clinicId = ClinicContext::getClinicId();
 
 if (!isset($_GET['patient_uid']) || empty($_GET['patient_uid'])) {
     die("Patient UID is required");
@@ -22,8 +23,8 @@ if (!isset($_GET['patient_uid']) || empty($_GET['patient_uid'])) {
 $patient_uid = $_GET['patient_uid'];
 
 // Get patient details
-$stmt = $conn->prepare("SELECT * FROM patients WHERE patient_uid = ?");
-$stmt->bind_param("s", $patient_uid);
+$stmt = $conn->prepare("SELECT * FROM patients WHERE patient_uid = ? AND clinic_id = ?");
+$stmt->bind_param("si", $patient_uid, $clinicId);
 $stmt->execute();
 $patient = $stmt->get_result()->fetch_assoc();
 
@@ -31,14 +32,25 @@ if (!$patient) {
     die("Patient not found");
 }
 
+$patientId = $patient['id'];
+
 // Get treatment history
-$treatments = $conn->query("SELECT * FROM treatments WHERE patient_id = (SELECT id FROM patients WHERE patient_uid = '$patient_uid') ORDER BY treatment_date DESC LIMIT 10");
+$s = $conn->prepare("SELECT * FROM treatments WHERE clinic_id = ? AND patient_id = ? ORDER BY treatment_date DESC LIMIT 10");
+$s->bind_param('ii', $clinicId, $patientId);
+$s->execute();
+$treatments = $s->get_result();
 
 // Get work done history
-$workDone = $conn->query("SELECT pwd.*, w.work_name FROM patient_work_done pwd JOIN work_done w ON pwd.work_done_id = w.id WHERE pwd.patient_id = (SELECT id FROM patients WHERE patient_uid = '$patient_uid') ORDER BY pwd.work_date DESC LIMIT 10");
+$s = $conn->prepare("SELECT pwd.*, w.work_name FROM patient_work_done pwd JOIN work_done w ON pwd.work_done_id = w.id WHERE pwd.clinic_id = ? AND pwd.patient_id = ? ORDER BY pwd.work_date DESC LIMIT 10");
+$s->bind_param('ii', $clinicId, $patientId);
+$s->execute();
+$workDone = $s->get_result();
 
 // Get prescriptions
-$prescriptions = $conn->query("SELECT * FROM prescriptions WHERE patient_id = (SELECT id FROM patients WHERE patient_uid = '$patient_uid') ORDER BY created_at DESC LIMIT 5");
+$s = $conn->prepare("SELECT * FROM prescriptions WHERE clinic_id = ? AND patient_id = ? ORDER BY created_at DESC LIMIT 5");
+$s->bind_param('ii', $clinicId, $patientId);
+$s->execute();
+$prescriptions = $s->get_result();
 
 // Create PDF
 $pdf = new PDFHelper($clinic, 'P', 'mm', 'A4');

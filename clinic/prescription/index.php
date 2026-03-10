@@ -14,25 +14,26 @@ ClinicContext::init();
 $pageTitle = 'Prescription Management';
 $clinic = ClinicContext::getClinicInfo();
 $conn = ClinicContext::getConnection();
+$clinicId = ClinicContext::getClinicId();
 
 // Get patient UID if provided
 $patient_uid = $_GET['patient_uid'] ?? '';
 
 // Get all patients for dropdown
-$patients = $conn->query("SELECT patient_uid, name FROM patients ORDER BY name");
+$patients = $conn->query("SELECT patient_uid, name FROM patients WHERE clinic_id = $clinicId ORDER BY name");
 
 // Get medicines for prescription
-$medicines = $conn->query("SELECT id, medicine_name, composition FROM medicine ORDER BY medicine_name");
+$medicines = $conn->query("SELECT id, medicine_name, composition FROM medicine WHERE clinic_id = $clinicId ORDER BY medicine_name");
 
 // Get doses and durations
-$doses = $conn->query("SELECT * FROM doses ORDER BY dose_name");
-$durations = $conn->query("SELECT * FROM durations ORDER BY duration_value");
+$doses = $conn->query("SELECT * FROM doses WHERE clinic_id = $clinicId ORDER BY dose_name");
+$durations = $conn->query("SELECT * FROM durations WHERE clinic_id = $clinicId ORDER BY duration_value");
 
 // If patient_uid provided, get patient details
 $patient = null;
 if ($patient_uid) {
-    $stmt = $conn->prepare("SELECT * FROM patients WHERE patient_uid = ?");
-    $stmt->bind_param('s', $patient_uid);
+    $stmt = $conn->prepare("SELECT * FROM patients WHERE patient_uid = ? AND clinic_id = ?");
+    $stmt->bind_param('si', $patient_uid, $clinicId);
     $stmt->execute();
     $result = $stmt->get_result();
     $patient = $result->fetch_assoc();

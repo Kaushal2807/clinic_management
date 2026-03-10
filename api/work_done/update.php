@@ -25,9 +25,13 @@ try {
     }
 
     $conn = ClinicContext::getConnection();
+    $clinicId = ClinicContext::getClinicId();
     
     // Get work cost from work_done table
-    $work = $conn->query("SELECT cost FROM work_done WHERE id = $work_done_id LIMIT 1")->fetch_assoc();
+    $stmt = $conn->prepare("SELECT cost FROM work_done WHERE id = ? AND clinic_id = ? LIMIT 1");
+    $stmt->bind_param("ii", $work_done_id, $clinicId);
+    $stmt->execute();
+    $work = $stmt->get_result()->fetch_assoc();
     if (!$work) {
         echo json_encode(['success' => false, 'message' => 'Work type not found']);
         exit;
@@ -36,8 +40,8 @@ try {
     
     $stmt = $conn->prepare("UPDATE patient_work_done 
                             SET work_done_id = ?, work_date = ?, notes = ?, quantity = ?, total_cost = ?
-                            WHERE id = ?");
-    $stmt->bind_param("issidi", $work_done_id, $work_date, $notes, $quantity, $total_cost, $id);
+                            WHERE id = ? AND clinic_id = ?");
+    $stmt->bind_param("issidii", $work_done_id, $work_date, $notes, $quantity, $total_cost, $id, $clinicId);
     
     if ($stmt->execute()) {
         echo json_encode(['success' => true, 'message' => 'Work record updated successfully']);

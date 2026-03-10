@@ -14,41 +14,42 @@ ClinicContext::init();
 
 $clinic = ClinicContext::getClinicInfo();
 $conn = ClinicContext::getConnection();
+$clinicId = ClinicContext::getClinicId();
 
 // Get date filters
 $dateFrom = $_GET['date_from'] ?? date('Y-m-01');
 $dateTo = $_GET['date_to'] ?? date('Y-m-d');
 
 // Get statistics
-$totalPatients = $conn->query("SELECT COUNT(*) as total FROM patients")->fetch_assoc()['total'];
+$totalPatients = $conn->query("SELECT COUNT(*) as total FROM patients WHERE clinic_id = $clinicId")->fetch_assoc()['total'];
 
 $newPatients = $conn->query("SELECT COUNT(*) as total FROM patients 
-    WHERE DATE(created_at) BETWEEN '$dateFrom' AND '$dateTo'")->fetch_assoc()['total'];
+    WHERE clinic_id = $clinicId AND DATE(created_at) BETWEEN '$dateFrom' AND '$dateTo'")->fetch_assoc()['total'];
 
 $totalRevenue = $conn->query("SELECT COALESCE(SUM(total_amount - payment_pending), 0) as total FROM patients 
-    WHERE DATE(created_at) BETWEEN '$dateFrom' AND '$dateTo'")->fetch_assoc()['total'];
+    WHERE clinic_id = $clinicId AND DATE(created_at) BETWEEN '$dateFrom' AND '$dateTo'")->fetch_assoc()['total'];
 
 $totalExpenses = $conn->query("SELECT COALESCE(SUM(amount), 0) as total FROM expenses 
-    WHERE DATE(expense_date) BETWEEN '$dateFrom' AND '$dateTo'")->fetch_assoc()['total'];
+    WHERE clinic_id = $clinicId AND DATE(expense_date) BETWEEN '$dateFrom' AND '$dateTo'")->fetch_assoc()['total'];
 
 $pendingPayments = $conn->query("SELECT COALESCE(SUM(payment_pending), 0) as total FROM patients 
-    WHERE payment_status IN ('pending', 'partial')")->fetch_assoc()['total'];
+    WHERE clinic_id = $clinicId AND payment_status IN ('pending', 'partial')")->fetch_assoc()['total'];
 
 $totalPrescriptions = $conn->query("SELECT COUNT(*) as total FROM prescriptions 
-    WHERE DATE(created_at) BETWEEN '$dateFrom' AND '$dateTo'")->fetch_assoc()['total'];
+    WHERE clinic_id = $clinicId AND DATE(created_at) BETWEEN '$dateFrom' AND '$dateTo'")->fetch_assoc()['total'];
 
 $totalTreatments = $conn->query("SELECT COUNT(*) as total FROM treatments 
-    WHERE DATE(treatment_date) BETWEEN '$dateFrom' AND '$dateTo'")->fetch_assoc()['total'];
+    WHERE clinic_id = $clinicId AND DATE(treatment_date) BETWEEN '$dateFrom' AND '$dateTo'")->fetch_assoc()['total'];
 
 $totalWorkDone = $conn->query("SELECT COALESCE(SUM(total_cost), 0) as total FROM patient_work_done 
-    WHERE DATE(work_date) BETWEEN '$dateFrom' AND '$dateTo'")->fetch_assoc()['total'];
+    WHERE clinic_id = $clinicId AND DATE(work_date) BETWEEN '$dateFrom' AND '$dateTo'")->fetch_assoc()['total'];
 
 // Payment status breakdown
-$paymentStats = $conn->query("SELECT payment_status, COUNT(*) as count FROM patients GROUP BY payment_status")->fetch_all(MYSQLI_ASSOC);
+$paymentStats = $conn->query("SELECT payment_status, COUNT(*) as count FROM patients WHERE clinic_id = $clinicId GROUP BY payment_status")->fetch_all(MYSQLI_ASSOC);
 
 // Top expenses
 $topExpenses = $conn->query("SELECT category, COALESCE(SUM(amount), 0) as total FROM expenses 
-    WHERE DATE(expense_date) BETWEEN '$dateFrom' AND '$dateTo' 
+    WHERE clinic_id = $clinicId AND DATE(expense_date) BETWEEN '$dateFrom' AND '$dateTo' 
     GROUP BY category ORDER BY total DESC LIMIT 5")->fetch_all(MYSQLI_ASSOC);
 
 // Create PDF

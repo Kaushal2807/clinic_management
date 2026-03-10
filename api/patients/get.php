@@ -21,8 +21,9 @@ try {
     }
 
     $conn = ClinicContext::getConnection();
-    $stmt = $conn->prepare("SELECT * FROM patients WHERE patient_uid = ?");
-    $stmt->bind_param("s", $patient_uid);
+    $clinicId = ClinicContext::getClinicId();
+    $stmt = $conn->prepare("SELECT * FROM patients WHERE patient_uid = ? AND clinic_id = ?");
+    $stmt->bind_param("si", $patient_uid, $clinicId);
     $stmt->execute();
     $result = $stmt->get_result();
     

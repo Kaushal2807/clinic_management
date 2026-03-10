@@ -23,8 +23,9 @@ try {
     }
 
     $conn = ClinicContext::getConnection();
-    $stmt = $conn->prepare("INSERT INTO work_types (work_name, cost, description) VALUES (?, ?, ?)");
-    $stmt->bind_param("sds", $work_name, $cost, $description);
+    $clinicId = ClinicContext::getClinicId();
+    $stmt = $conn->prepare("INSERT INTO work_types (clinic_id, work_name, cost, description) VALUES (?, ?, ?, ?)");
+    $stmt->bind_param("isds", $clinicId, $work_name, $cost, $description);
     
     if ($stmt->execute()) {
         echo json_encode([

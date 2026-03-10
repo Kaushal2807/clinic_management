@@ -14,6 +14,7 @@ ClinicContext::init();
 $pageTitle = 'Work Done Management';
 $clinic = ClinicContext::getClinicInfo();
 $conn = ClinicContext::getConnection();
+$clinicId = ClinicContext::getClinicId();
 
 // Get all work done records
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -21,11 +22,11 @@ $perPage = RECORDS_PER_PAGE;
 $offset = ($page - 1) * $perPage;
 
 $search = $_GET['search'] ?? '';
-$searchCondition = '';
+$searchCondition = "WHERE pwd.clinic_id = $clinicId";
 
 if ($search) {
     $search_escaped = $conn->real_escape_string($search);
-    $searchCondition = "WHERE p.name LIKE '%$search_escaped%' OR p.patient_uid LIKE '%$search_escaped%' OR wd.work_name LIKE '%$search_escaped%'";
+    $searchCondition .= " AND (p.name LIKE '%$search_escaped%' OR p.patient_uid LIKE '%$search_escaped%' OR wd.work_name LIKE '%$search_escaped%')";
 }
 
 $totalResult = $conn->query("SELECT COUNT(*) as total FROM patient_work_done pwd 
@@ -45,8 +46,8 @@ $query = "SELECT pwd.*, p.name, p.age, p.patient_uid, wd.work_name, wd.cost as u
 $workRecords = $conn->query($query);
 
 // Get patients and work types
-$patients = $conn->query("SELECT id, patient_uid, name FROM patients ORDER BY name");
-$workTypes = $conn->query("SELECT * FROM work_done WHERE is_active = 1 ORDER BY work_name");
+$patients = $conn->query("SELECT id, patient_uid, name FROM patients WHERE clinic_id = $clinicId ORDER BY name");
+$workTypes = $conn->query("SELECT * FROM work_done WHERE clinic_id = $clinicId AND is_active = 1 ORDER BY work_name");
 
 include __DIR__ . '/../../includes/clinic_header.php';
 ?>

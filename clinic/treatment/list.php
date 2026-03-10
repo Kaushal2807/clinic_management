@@ -14,6 +14,7 @@ ClinicContext::init();
 $pageTitle = 'All Treatments';
 $clinic = ClinicContext::getClinicInfo();
 $conn = ClinicContext::getConnection();
+$clinicId = ClinicContext::getClinicId();
 
 // Pagination
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -25,7 +26,7 @@ $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 $status_filter = isset($_GET['status']) ? $_GET['status'] : '';
 
 // Build WHERE clause
-$where_conditions = [];
+$where_conditions = ["t.clinic_id = $clinicId"];
 $where_params = [];
 $where_types = '';
 
@@ -44,10 +45,7 @@ if ($status_filter) {
     $where_types .= 's';
 }
 
-$where_clause = '';
-if (!empty($where_conditions)) {
-    $where_clause = 'WHERE ' . implode(' AND ', $where_conditions);
-}
+$where_clause = 'WHERE ' . implode(' AND ', $where_conditions);
 
 // Get total count
 $count_query = "SELECT COUNT(*) as total 
@@ -88,10 +86,10 @@ if (!empty($where_params)) {
 }
 
 // Get statistics
-$stats_planned = $conn->query("SELECT COUNT(*) as count FROM treatments WHERE status = 'planned'")->fetch_assoc()['count'];
-$stats_completed = $conn->query("SELECT COUNT(*) as count FROM treatments WHERE status = 'completed'")->fetch_assoc()['count'];
-$stats_cancelled = $conn->query("SELECT COUNT(*) as count FROM treatments WHERE status = 'cancelled'")->fetch_assoc()['count'];
-$stats_total = $conn->query("SELECT COUNT(*) as count FROM treatments")->fetch_assoc()['count'];
+$stats_planned = $conn->query("SELECT COUNT(*) as count FROM treatments WHERE clinic_id = $clinicId AND status = 'planned'")->fetch_assoc()['count'];
+$stats_completed = $conn->query("SELECT COUNT(*) as count FROM treatments WHERE clinic_id = $clinicId AND status = 'completed'")->fetch_assoc()['count'];
+$stats_cancelled = $conn->query("SELECT COUNT(*) as count FROM treatments WHERE clinic_id = $clinicId AND status = 'cancelled'")->fetch_assoc()['count'];
+$stats_total = $conn->query("SELECT COUNT(*) as count FROM treatments WHERE clinic_id = $clinicId")->fetch_assoc()['count'];
 
 include __DIR__ . '/../../includes/clinic_header.php';
 ?>

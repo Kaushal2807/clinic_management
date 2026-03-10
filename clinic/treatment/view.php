@@ -14,6 +14,7 @@ ClinicContext::init();
 $pageTitle = 'Treatment History';
 $clinic = ClinicContext::getClinicInfo();
 $conn = ClinicContext::getConnection();
+$clinicId = ClinicContext::getClinicId();
 
 if (!isset($_GET['patient_uid']) || empty($_GET['patient_uid'])) {
     header('Location: ../patients/index.php');
@@ -23,8 +24,8 @@ if (!isset($_GET['patient_uid']) || empty($_GET['patient_uid'])) {
 $patient_uid = $_GET['patient_uid'];
 
 // Get patient info
-$stmt = $conn->prepare("SELECT name FROM patients WHERE patient_uid = ?");
-$stmt->bind_param("s", $patient_uid);
+$stmt = $conn->prepare("SELECT id, name FROM patients WHERE patient_uid = ? AND clinic_id = ?");
+$stmt->bind_param("si", $patient_uid, $clinicId);
 $stmt->execute();
 $patient = $stmt->get_result()->fetch_assoc();
 
@@ -34,7 +35,10 @@ if (!$patient) {
 }
 
 // Get all treatments
-$treatments = $conn->query("SELECT * FROM treatments WHERE patient_id = (SELECT id FROM patients WHERE patient_uid = '$patient_uid') ORDER BY treatment_date DESC");
+$s = $conn->prepare("SELECT * FROM treatments WHERE clinic_id = ? AND patient_id = ? ORDER BY treatment_date DESC");
+$s->bind_param('ii', $clinicId, $patient['id']);
+$s->execute();
+$treatments = $s->get_result();
 
 include __DIR__ . '/../../includes/clinic_header.php';
 ?>

@@ -14,6 +14,7 @@ ClinicContext::init();
 
 $clinic = ClinicContext::getClinicInfo();
 $conn = ClinicContext::getConnection();
+$clinicId = ClinicContext::getClinicId();
 
 if (!isset($_GET['patient_uid']) || empty($_GET['patient_uid'])) {
     die("Patient UID is required");
@@ -22,14 +23,22 @@ if (!isset($_GET['patient_uid']) || empty($_GET['patient_uid'])) {
 $patient_uid = $_GET['patient_uid'];
 
 // Get patient details
-$patient = $conn->query("SELECT * FROM patients WHERE patient_uid = '$patient_uid' LIMIT 1")->fetch_assoc();
+$stmt = $conn->prepare("SELECT * FROM patients WHERE patient_uid = ? AND clinic_id = ? LIMIT 1");
+$stmt->bind_param("si", $patient_uid, $clinicId);
+$stmt->execute();
+$patient = $stmt->get_result()->fetch_assoc();
 
 if (!$patient) {
     die("Patient not found");
 }
 
+$patientId = $patient['id'];
+
 // Get work done
-$workDone = $conn->query("SELECT pwd.*, w.work_name FROM patient_work_done pwd JOIN work_done w ON pwd.work_done_id = w.id WHERE pwd.patient_id = (SELECT id FROM patients WHERE patient_uid = '$patient_uid') ORDER BY pwd.work_date DESC");
+$stmt2 = $conn->prepare("SELECT pwd.*, w.work_name FROM patient_work_done pwd JOIN work_done w ON pwd.work_done_id = w.id WHERE pwd.clinic_id = ? AND pwd.patient_id = ? ORDER BY pwd.work_date DESC");
+$stmt2->bind_param("ii", $clinicId, $patientId);
+$stmt2->execute();
+$workDone = $stmt2->get_result();
 
 // Create PDF
 $pdf = new PDFHelper($clinic, 'P', 'mm', 'A4');

@@ -21,9 +21,11 @@ try {
         throw new Exception('Invalid data');
     }
     
-    $sql = "UPDATE medicine SET quantity = quantity + ? WHERE id = ?";
+    $clinicId = ClinicContext::getClinicId();
+    
+    $sql = "UPDATE medicine SET quantity = quantity + ? WHERE id = ? AND clinic_id = ?";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param('ii', $quantity, $medicine_id);
+    $stmt->bind_param('iii', $quantity, $medicine_id, $clinicId);
     
     if ($stmt->execute()) {
         echo json_encode(['success' => true, 'message' => 'Quantity added successfully']);

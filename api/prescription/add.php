@@ -13,6 +13,7 @@ header('Content-Type: application/json');
 
 try {
     $conn = ClinicContext::getConnection();
+    $clinicId = ClinicContext::getClinicId();
     
     $patient_uid = $_POST['patient_uid'] ?? '';
     $prescription_date = $_POST['prescription_date'] ?? date('Y-m-d');
@@ -28,8 +29,8 @@ try {
     }
     
     // Get patient_id from patient_uid
-    $patient_query = $conn->prepare("SELECT id FROM patients WHERE patient_uid = ?");
-    $patient_query->bind_param('s', $patient_uid);
+    $patient_query = $conn->prepare("SELECT id FROM patients WHERE patient_uid = ? AND clinic_id = ?");
+    $patient_query->bind_param('si', $patient_uid, $clinicId);
     $patient_query->execute();
     $patient_result = $patient_query->get_result();
     $patient_data = $patient_result->fetch_assoc();
@@ -44,9 +45,9 @@ try {
     $conn->begin_transaction();
     
     // Insert prescription
-    $sql = "INSERT INTO prescriptions (patient_id, prescription_date, notes, created_at) VALUES (?, ?, ?, NOW())";
+    $sql = "INSERT INTO prescriptions (clinic_id, patient_id, prescription_date, notes, created_at) VALUES (?, ?, ?, ?, NOW())";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param('iss', $patient_id, $prescription_date, $notes);
+    $stmt->bind_param('iiss', $clinicId, $patient_id, $prescription_date, $notes);
     
     if (!$stmt->execute()) {
         throw new Exception('Failed to create prescription');
@@ -55,8 +56,8 @@ try {
     $prescription_id = $stmt->insert_id;
     
     // Insert medicines
-    $sql = "INSERT INTO prescription_medicines (prescription_id, medicine_id, dose, duration, instructions) 
-            VALUES (?, ?, ?, ?, ?)";
+    $sql = "INSERT INTO prescription_medicines (clinic_id, prescription_id, medicine_id, dose, duration, instructions) 
+            VALUES (?, ?, ?, ?, ?, ?)";
     $stmt = $conn->prepare($sql);
     
     foreach ($medicines as $medicine) {
@@ -69,14 +70,16 @@ try {
         $duration = $medicine['duration'];
         $instructions = $medicine['instructions'] ?? '';
         
-        $stmt->bind_param('iisss', $prescription_id, $medicine_id, $dose, $duration, $instructions);
+        $stmt->bind_param('iiisss', $clinicId, $prescription_id, $medicine_id, $dose, $duration, $instructions);
         
         if (!$stmt->execute()) {
             throw new Exception('Failed to add medicine');
         }
         
         // Update medicine quantity (reduce by 1)
-        $conn->query("UPDATE medicine SET quantity = GREATEST(quantity - 1, 0) WHERE id = $medicine_id");
+        $updStmt = $conn->prepare("UPDATE medicine SET quantity = GREATEST(quantity - 1, 0) WHERE id = ? AND clinic_id = ?");
+        $updStmt->bind_param('ii', $medicine_id, $clinicId);
+        $updStmt->execute();
     }
     
     $conn->commit();

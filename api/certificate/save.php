@@ -26,10 +26,11 @@ try {
     }
 
     $conn = ClinicContext::getConnection();
+    $clinicId = ClinicContext::getClinicId();
     
     // Get patient_id from patient_uid
-    $patient_query = $conn->prepare("SELECT id FROM patients WHERE patient_uid = ?");
-    $patient_query->bind_param('s', $patient_uid);
+    $patient_query = $conn->prepare("SELECT id FROM patients WHERE patient_uid = ? AND clinic_id = ?");
+    $patient_query->bind_param('si', $patient_uid, $clinicId);
     $patient_query->execute();
     $patient_result = $patient_query->get_result();
     $patient_data = $patient_result->fetch_assoc();
@@ -43,12 +44,13 @@ try {
     
     // Certificates table already created with patient_id
     $stmt = $conn->prepare("INSERT INTO certificates 
-        (patient_id, patient_uid, certificate_no, certificate_date, complaints, treatment_given, advice, created_at) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, NOW())");
+        (clinic_id, patient_id, patient_uid, certificate_no, certificate_date, complaints, treatment_given, advice, created_at) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
     
     $certificate_no = 'CERT-' . date('Ymd') . '-' . rand(1000, 9999);
     
-    $stmt->bind_param("issssss", 
+    $stmt->bind_param("iissssss", 
+        $clinicId,
         $patient_id,
         $patient_uid, 
         $certificate_no,

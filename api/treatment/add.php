@@ -13,6 +13,7 @@ header('Content-Type: application/json');
 
 try {
     $conn = ClinicContext::getConnection();
+    $clinicId = ClinicContext::getClinicId();
     
     $patient_uid = $_POST['patient_uid'] ?? '';
     $selected_teeth = $_POST['selected_teeth'] ?? '';
@@ -30,8 +31,8 @@ try {
     }
     
     // Get patient_id from patient_uid
-    $patient_query = $conn->prepare("SELECT id FROM patients WHERE patient_uid = ?");
-    $patient_query->bind_param('s', $patient_uid);
+    $patient_query = $conn->prepare("SELECT id FROM patients WHERE patient_uid = ? AND clinic_id = ?");
+    $patient_query->bind_param('si', $patient_uid, $clinicId);
     $patient_query->execute();
     $patient_result = $patient_query->get_result();
     $patient_data = $patient_result->fetch_assoc();
@@ -43,14 +44,14 @@ try {
     $patient_id = $patient_data['id'];
     
     $sql = "INSERT INTO treatments (
-        patient_id, selected_teeth, treatment_name, category, description,
+        clinic_id, patient_id, selected_teeth, treatment_name, category, description,
         treatment_date, cost, status, next_visit, notes, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
     
     $stmt = $conn->prepare($sql);
     $stmt->bind_param(
-        'isssssdsss',
-        $patient_id, $selected_teeth, $treatment_name, $category, $description,
+        'iisssssdsss',
+        $clinicId, $patient_id, $selected_teeth, $treatment_name, $category, $description,
         $treatment_date, $cost, $status, $next_visit, $notes
     );
     

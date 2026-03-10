@@ -14,6 +14,7 @@ ClinicContext::init();
 $pageTitle = 'Medicine Management';
 $clinic = ClinicContext::getClinicInfo();
 $conn = ClinicContext::getConnection();
+$clinicId = ClinicContext::getClinicId();
 
 // Pagination
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -22,11 +23,11 @@ $offset = ($page - 1) * $perPage;
 
 // Search functionality
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
-$searchCondition = '';
+$searchCondition = "WHERE clinic_id = $clinicId";
 
 if ($search) {
-    $searchCondition = "WHERE medicine_name LIKE '%" . $conn->real_escape_string($search) . "%' 
-                        OR composition LIKE '%" . $conn->real_escape_string($search) . "%'";
+    $searchCondition .= " AND (medicine_name LIKE '%" . $conn->real_escape_string($search) . "%' 
+                        OR composition LIKE '%" . $conn->real_escape_string($search) . "%')";
 }
 
 // Get total count
@@ -39,9 +40,9 @@ $query = "SELECT * FROM medicine $searchCondition ORDER BY medicine_name ASC LIM
 $medicines = $conn->query($query);
 
 // Get categories, doses, and durations for dropdowns
-$categories = $conn->query("SELECT DISTINCT category FROM medicine WHERE category IS NOT NULL AND category != '' ORDER BY category");
-$doses = $conn->query("SELECT * FROM doses ORDER BY dose_name");
-$durations = $conn->query("SELECT * FROM durations ORDER BY duration_value");
+$categories = $conn->query("SELECT DISTINCT category FROM medicine WHERE clinic_id = $clinicId AND category IS NOT NULL AND category != '' ORDER BY category");
+$doses = $conn->query("SELECT * FROM doses WHERE clinic_id = $clinicId ORDER BY dose_name");
+$durations = $conn->query("SELECT * FROM durations WHERE clinic_id = $clinicId ORDER BY duration_value");
 
 include __DIR__ . '/../../includes/clinic_header.php';
 ?>

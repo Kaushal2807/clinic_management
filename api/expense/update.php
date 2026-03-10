@@ -26,10 +26,11 @@ try {
     }
 
     $conn = ClinicContext::getConnection();
+    $clinicId = ClinicContext::getClinicId();
     $stmt = $conn->prepare("UPDATE expenses 
                             SET category = ?, expense_date = ?, description = ?, vendor = ?, amount = ?
-                            WHERE id = ?");
-    $stmt->bind_param("ssssdi", $category, $expense_date, $description, $vendor, $amount, $id);
+                            WHERE id = ? AND clinic_id = ?");
+    $stmt->bind_param("ssssdii", $category, $expense_date, $description, $vendor, $amount, $id, $clinicId);
     
     if ($stmt->execute()) {
         echo json_encode(['success' => true, 'message' => 'Expense updated successfully']);

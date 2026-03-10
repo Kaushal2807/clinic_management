@@ -12,8 +12,9 @@ ClinicContext::init();
 
 $pageTitle = 'Manage Work Types';
 $conn = ClinicContext::getConnection();
+$clinicId = ClinicContext::getClinicId();
 
-$workTypes = $conn->query("SELECT * FROM work_types ORDER BY work_name");
+$workTypes = $conn->query("SELECT * FROM work_types WHERE clinic_id = $clinicId ORDER BY work_name");
 
 include __DIR__ . '/../../includes/clinic_header.php';
 ?>

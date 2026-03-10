@@ -14,6 +14,7 @@ ClinicContext::init();
 $pageTitle = 'Work Done History';
 $clinic = ClinicContext::getClinicInfo();
 $conn = ClinicContext::getConnection();
+$clinicId = ClinicContext::getClinicId();
 
 if (!isset($_GET['patient_uid']) || empty($_GET['patient_uid'])) {
     header('Location: ../patients/index.php');
@@ -23,8 +24,8 @@ if (!isset($_GET['patient_uid']) || empty($_GET['patient_uid'])) {
 $patient_uid = $_GET['patient_uid'];
 
 // Get patient info
-$stmt = $conn->prepare("SELECT name FROM patients WHERE patient_uid = ?");
-$stmt->bind_param("s", $patient_uid);
+$stmt = $conn->prepare("SELECT id, name FROM patients WHERE patient_uid = ? AND clinic_id = ?");
+$stmt->bind_param("si", $patient_uid, $clinicId);
 $stmt->execute();
 $patient = $stmt->get_result()->fetch_assoc();
 
@@ -33,11 +34,19 @@ if (!$patient) {
     exit;
 }
 
+$patientId = $patient['id'];
+
 // Get all work done
-$workDone = $conn->query("SELECT pwd.*, w.work_name FROM patient_work_done pwd JOIN work_done w ON pwd.work_done_id = w.id WHERE pwd.patient_id = (SELECT id FROM patients WHERE patient_uid = '$patient_uid') ORDER BY pwd.work_date DESC");
+$stmt2 = $conn->prepare("SELECT pwd.*, w.work_name FROM patient_work_done pwd JOIN work_done w ON pwd.work_done_id = w.id WHERE pwd.clinic_id = ? AND pwd.patient_id = ? ORDER BY pwd.work_date DESC");
+$stmt2->bind_param("ii", $clinicId, $patientId);
+$stmt2->execute();
+$workDone = $stmt2->get_result();
 
 // Calculate total cost
-$totalCost = $conn->query("SELECT COALESCE(SUM(total_cost), 0) as total FROM patient_work_done WHERE patient_id = (SELECT id FROM patients WHERE patient_uid = '$patient_uid')")->fetch_assoc()['total'];
+$stmt3 = $conn->prepare("SELECT COALESCE(SUM(total_cost), 0) as total FROM patient_work_done WHERE clinic_id = ? AND patient_id = ?");
+$stmt3->bind_param("ii", $clinicId, $patientId);
+$stmt3->execute();
+$totalCost = $stmt3->get_result()->fetch_assoc()['total'];
 
 include __DIR__ . '/../../includes/clinic_header.php';
 ?>

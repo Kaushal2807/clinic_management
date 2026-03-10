@@ -14,6 +14,7 @@ ClinicContext::init();
 
 $clinic = ClinicContext::getClinicInfo();
 $conn = ClinicContext::getConnection();
+$clinicId = ClinicContext::getClinicId();
 
 if (!isset($_GET['id']) || empty($_GET['id'])) {
     die("Prescription ID is required");
@@ -21,26 +22,14 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 
 $prescriptionId = (int)$_GET['id'];
 
-// Get prescription details
+// Get prescription details with patient info
 $stmt = $conn->prepare("SELECT p.*, pt.name, pt.age, pt.gender, pt.contact_number, pt.address, pt.patient_uid
                         FROM prescriptions p
-                        JOIN patients pt ON p.patient_id = (SELECT id FROM patients WHERE patient_uid = p.patient_id LIMIT 1)
-                        WHERE p.id = ?");
-$stmt->bind_param("i", $prescriptionId);
+                        JOIN patients pt ON p.patient_id = pt.id
+                        WHERE p.id = ? AND p.clinic_id = ?");
+$stmt->bind_param("ii", $prescriptionId, $clinicId);
 $stmt->execute();
 $prescription = $stmt->get_result()->fetch_assoc();
-
-if (!$prescription) {
-    // Try alternative query
-    $prescription = $conn->query("SELECT * FROM prescriptions WHERE id = $prescriptionId")->fetch_assoc();
-    if ($prescription) {
-        // Get patient info
-        $patient = $conn->query("SELECT * FROM patients WHERE patient_uid = '{$prescription['patient_id']}' LIMIT 1")->fetch_assoc();
-        if ($patient) {
-            $prescription = array_merge($prescription, $patient);
-        }
-    }
-}
 
 if (!$prescription) {
     die("Prescription not found");
@@ -76,10 +65,10 @@ $pdf->addInfoBox('Patient Information', $patientData);
 $pdf->addSectionHeader('Prescribed Medicines');
 
 // Get medicines - try different table structures
-$medicines = $conn->query("SELECT * FROM prescription_medicines WHERE prescription_id = $prescriptionId");
-if (!$medicines || $medicines->num_rows === 0) {
-    $medicines = $conn->query("SELECT * FROM prescription_items WHERE prescription_id = $prescriptionId");
-}
+$medStmt = $conn->prepare("SELECT * FROM prescription_medicines WHERE prescription_id = ? AND clinic_id = ?");
+$medStmt->bind_param('ii', $prescriptionId, $clinicId);
+$medStmt->execute();
+$medicines = $medStmt->get_result();
 
 if ($medicines && $medicines->num_rows > 0) {
     $medicineList = [];

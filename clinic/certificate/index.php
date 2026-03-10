@@ -14,13 +14,14 @@ ClinicContext::init();
 $pageTitle = 'Medical Certificates';
 $clinic = ClinicContext::getClinicInfo();
 $conn = ClinicContext::getConnection();
+$clinicId = ClinicContext::getClinicId();
 
 // Get patient_uid from URL if provided
 $selectedPatientUid = $_GET['patient_uid'] ?? '';
 $selectedPatientName = $_GET['name'] ?? '';
 
 // Get all patients for dropdown
-$patients = $conn->query("SELECT patient_uid, name FROM patients ORDER BY name");
+$patients = $conn->query("SELECT patient_uid, name FROM patients WHERE clinic_id = $clinicId ORDER BY name");
 
 // Get all certificates
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -29,11 +30,12 @@ $offset = ($page - 1) * $perPage;
 
 $certificates = $conn->query("SELECT c.*, p.name as patient_name 
     FROM certificates c
-    JOIN patients p ON c.patient_uid = p.patient_uid
+    JOIN patients p ON c.patient_id = p.id
+    WHERE c.clinic_id = $clinicId
     ORDER BY c.certificate_date DESC
     LIMIT $perPage OFFSET $offset");
 
-$totalCertificates = $conn->query("SELECT COUNT(*) as total FROM certificates")->fetch_assoc()['total'];
+$totalCertificates = $conn->query("SELECT COUNT(*) as total FROM certificates WHERE clinic_id = $clinicId")->fetch_assoc()['total'];
 $totalPages = ceil($totalCertificates / $perPage);
 
 include __DIR__ . '/../../includes/clinic_header.php';

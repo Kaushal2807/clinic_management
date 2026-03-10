@@ -25,9 +25,13 @@ try {
     }
 
     $conn = ClinicContext::getConnection();
+    $clinicId = ClinicContext::getClinicId();
     
     // Get patient_id from patient_uid
-    $patient = $conn->query("SELECT id FROM patients WHERE patient_uid = '$patient_uid' LIMIT 1")->fetch_assoc();
+    $stmt = $conn->prepare("SELECT id FROM patients WHERE patient_uid = ? AND clinic_id = ? LIMIT 1");
+    $stmt->bind_param("si", $patient_uid, $clinicId);
+    $stmt->execute();
+    $patient = $stmt->get_result()->fetch_assoc();
     if (!$patient) {
         echo json_encode(['success' => false, 'message' => 'Patient not found']);
         exit;
@@ -35,16 +39,19 @@ try {
     $patient_id = $patient['id'];
     
     // Get work cost from work_done table
-    $work = $conn->query("SELECT cost FROM work_done WHERE id = $work_done_id LIMIT 1")->fetch_assoc();
+    $stmt2 = $conn->prepare("SELECT cost FROM work_done WHERE id = ? AND clinic_id = ? LIMIT 1");
+    $stmt2->bind_param("ii", $work_done_id, $clinicId);
+    $stmt2->execute();
+    $work = $stmt2->get_result()->fetch_assoc();
     if (!$work) {
         echo json_encode(['success' => false, 'message' => 'Work type not found']);
         exit;
     }
     $total_cost = $work['cost'] * $quantity;
     
-    $stmt = $conn->prepare("INSERT INTO patient_work_done (patient_id, work_done_id, quantity, total_cost, work_date, notes, created_at) 
-                            VALUES (?, ?, ?, ?, ?, ?, NOW())");
-    $stmt->bind_param("iiidss", $patient_id, $work_done_id, $quantity, $total_cost, $work_date, $notes);
+    $stmt = $conn->prepare("INSERT INTO patient_work_done (clinic_id, patient_id, work_done_id, quantity, total_cost, work_date, notes, created_at) 
+                            VALUES (?, ?, ?, ?, ?, ?, ?, NOW())");
+    $stmt->bind_param("iiiidss", $clinicId, $patient_id, $work_done_id, $quantity, $total_cost, $work_date, $notes);
     
     if ($stmt->execute()) {
         echo json_encode([

@@ -14,6 +14,7 @@ ClinicContext::init();
 $pageTitle = 'View Prescriptions';
 $clinic = ClinicContext::getClinicInfo();
 $conn = ClinicContext::getConnection();
+$clinicId = ClinicContext::getClinicId();
 
 if (!isset($_GET['patient_uid']) || empty($_GET['patient_uid'])) {
     header('Location: ../patients/index.php');
@@ -23,8 +24,8 @@ if (!isset($_GET['patient_uid']) || empty($_GET['patient_uid'])) {
 $patient_uid = $_GET['patient_uid'];
 
 // Get patient info
-$stmt = $conn->prepare("SELECT name FROM patients WHERE patient_uid = ?");
-$stmt->bind_param("s", $patient_uid);
+$stmt = $conn->prepare("SELECT id, name FROM patients WHERE patient_uid = ? AND clinic_id = ?");
+$stmt->bind_param("si", $patient_uid, $clinicId);
 $stmt->execute();
 $patient = $stmt->get_result()->fetch_assoc();
 
@@ -34,7 +35,10 @@ if (!$patient) {
 }
 
 // Get all prescriptions
-$prescriptions = $conn->query("SELECT * FROM prescriptions WHERE patient_id = (SELECT id FROM patients WHERE patient_uid = '$patient_uid') ORDER BY created_at DESC");
+$s = $conn->prepare("SELECT * FROM prescriptions WHERE clinic_id = ? AND patient_id = ? ORDER BY created_at DESC");
+$s->bind_param('ii', $clinicId, $patient['id']);
+$s->execute();
+$prescriptions = $s->get_result();
 
 include __DIR__ . '/../../includes/clinic_header.php';
 ?>
@@ -90,7 +94,7 @@ include __DIR__ . '/../../includes/clinic_header.php';
                     JOIN medicines m ON pm.medicine_id = m.id
                     LEFT JOIN doses d ON pm.dose_id = d.id
                     LEFT JOIN durations du ON pm.duration_id = du.id
-                    WHERE pm.prescription_id = $rxId");
+                    WHERE pm.prescription_id = $rxId AND pm.clinic_id = $clinicId");
             ?>
             <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition">
                 <div class="bg-gradient-to-r from-green-500 to-teal-500 text-white px-6 py-4">

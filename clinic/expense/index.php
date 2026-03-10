@@ -14,14 +14,15 @@ ClinicContext::init();
 $pageTitle = 'Expense Management';
 $clinic = ClinicContext::getClinicInfo();
 $conn = ClinicContext::getConnection();
+$clinicId = ClinicContext::getClinicId();
 
 // Get expense statistics
 $today = date('Y-m-d');
 $currentMonth = date('Y-m');
 
-$todayExpense = $conn->query("SELECT COALESCE(SUM(amount), 0) as total FROM expenses WHERE DATE(expense_date) = '$today'")->fetch_assoc()['total'];
-$monthExpense = $conn->query("SELECT COALESCE(SUM(amount), 0) as total FROM expenses WHERE DATE_FORMAT(expense_date, '%Y-%m') = '$currentMonth'")->fetch_assoc()['total'];
-$totalExpenses = $conn->query("SELECT COUNT(*) as total FROM expenses")->fetch_assoc()['total'];
+$todayExpense = $conn->query("SELECT COALESCE(SUM(amount), 0) as total FROM expenses WHERE clinic_id = $clinicId AND DATE(expense_date) = '$today'")->fetch_assoc()['total'];
+$monthExpense = $conn->query("SELECT COALESCE(SUM(amount), 0) as total FROM expenses WHERE clinic_id = $clinicId AND DATE_FORMAT(expense_date, '%Y-%m') = '$currentMonth'")->fetch_assoc()['total'];
+$totalExpenses = $conn->query("SELECT COUNT(*) as total FROM expenses WHERE clinic_id = $clinicId")->fetch_assoc()['total'];
 
 // Get expenses with pagination
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -33,7 +34,7 @@ $category = $_GET['category'] ?? '';
 $dateFrom = $_GET['date_from'] ?? '';
 $dateTo = $_GET['date_to'] ?? '';
 
-$conditions = [];
+$conditions = ["e.clinic_id = $clinicId"];
 if ($search) {
     $search_escaped = $conn->real_escape_string($search);
     $conditions[] = "(e.description LIKE '%$search_escaped%' OR e.category LIKE '%$search_escaped%')";
@@ -49,7 +50,7 @@ if ($dateTo) {
     $conditions[] = "DATE(e.expense_date) <= '$dateTo'";
 }
 
-$whereClause = !empty($conditions) ? 'WHERE ' . implode(' AND ', $conditions) : '';
+$whereClause = 'WHERE ' . implode(' AND ', $conditions);
 
 $totalResult = $conn->query("SELECT COUNT(*) as total FROM expenses e $whereClause");
 $totalRecords = $totalResult->fetch_assoc()['total'];
@@ -63,7 +64,7 @@ $query = "SELECT e.*
 $expenses = $conn->query($query);
 
 // Get categories
-$categories = $conn->query("SELECT * FROM expense_categories ORDER BY category_name");
+$categories = $conn->query("SELECT * FROM expense_categories WHERE clinic_id = $clinicId ORDER BY category_name");
 
 include __DIR__ . '/../../includes/clinic_header.php';
 ?>

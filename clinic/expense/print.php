@@ -14,6 +14,7 @@ ClinicContext::init();
 
 $clinic = ClinicContext::getClinicInfo();
 $conn = ClinicContext::getConnection();
+$clinicId = ClinicContext::getClinicId();
 
 // Get filters
 $dateFrom = $_GET['date_from'] ?? date('Y-m-01'); // First day of current month
@@ -21,7 +22,7 @@ $dateTo = $_GET['date_to'] ?? date('Y-m-d'); // Today
 $category = $_GET['category'] ?? '';
 
 // Build query
-$conditions = ["DATE(expense_date) BETWEEN '$dateFrom' AND '$dateTo'"];
+$conditions = ["clinic_id = $clinicId", "DATE(expense_date) BETWEEN '$dateFrom' AND '$dateTo'"];
 if ($category) {
     $conditions[] = "category = '" . $conn->real_escape_string($category) . "'";
 }

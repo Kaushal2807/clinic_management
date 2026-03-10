@@ -14,6 +14,7 @@ ClinicContext::init();
 $pageTitle = 'Patient Management';
 $clinic = ClinicContext::getClinicInfo();
 $conn = ClinicContext::getConnection();
+$clinicId = ClinicContext::getClinicId();
 
 // Pagination
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -22,11 +23,11 @@ $offset = ($page - 1) * $perPage;
 
 // Search
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
-$searchCondition = '';
+$searchCondition = "WHERE clinic_id = $clinicId";
 
 if ($search) {
     $search_escaped = $conn->real_escape_string($search);
-    $searchCondition = "WHERE patient_uid LIKE '%$search_escaped%' OR name LIKE '%$search_escaped%' OR contact_number LIKE '%$search_escaped%'";
+    $searchCondition .= " AND (patient_uid LIKE '%$search_escaped%' OR name LIKE '%$search_escaped%' OR contact_number LIKE '%$search_escaped%')";
 }
 
 // Get total count
@@ -38,9 +39,15 @@ $totalPages = ceil($totalPatients / $perPage);
 $query = "SELECT * FROM patients $searchCondition ORDER BY created_at DESC LIMIT $perPage OFFSET $offset";
 $patients = $conn->query($query);
 
-// Get next patient ID
-$lastPatient = $conn->query("SELECT patient_uid FROM patients ORDER BY id DESC LIMIT 1")->fetch_assoc();
-$nextPatientId = 'P' . str_pad((int)substr($lastPatient['patient_uid'] ?? 'P0', 1) + 1, 4, '0', STR_PAD_LEFT);
+// Get next patient ID using clinic prefix
+$prefix = ClinicContext::getClinicPrefix();
+$lastPatient = $conn->query("SELECT patient_uid FROM patients WHERE clinic_id = $clinicId ORDER BY id DESC LIMIT 1")->fetch_assoc();
+if ($lastPatient && preg_match('/_(\d+)$/', $lastPatient['patient_uid'], $m)) {
+    $nextNum = (int)$m[1] + 1;
+} else {
+    $nextNum = 1;
+}
+$nextPatientId = $prefix . '_' . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
 
 include __DIR__ . '/../../includes/clinic_header.php';
 ?>
@@ -60,10 +67,10 @@ include __DIR__ . '/../../includes/clinic_header.php';
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
             <?php
             $stats = [
-                'total' => $conn->query("SELECT COUNT(*) as count FROM patients")->fetch_assoc()['count'],
-                'today' => $conn->query("SELECT COUNT(*) as count FROM patients WHERE DATE(created_at) = CURDATE()")->fetch_assoc()['count'],
-                'pending' => $conn->query("SELECT COUNT(*) as count FROM patients WHERE payment_status = 'pending'")->fetch_assoc()['count'],
-                'paid' => $conn->query("SELECT COUNT(*) as count FROM patients WHERE payment_status = 'paid'")->fetch_assoc()['count'],
+                'total' => $conn->query("SELECT COUNT(*) as count FROM patients WHERE clinic_id = $clinicId")->fetch_assoc()['count'],
+                'today' => $conn->query("SELECT COUNT(*) as count FROM patients WHERE clinic_id = $clinicId AND DATE(created_at) = CURDATE()")->fetch_assoc()['count'],
+                'pending' => $conn->query("SELECT COUNT(*) as count FROM patients WHERE clinic_id = $clinicId AND payment_status = 'pending'")->fetch_assoc()['count'],
+                'paid' => $conn->query("SELECT COUNT(*) as count FROM patients WHERE clinic_id = $clinicId AND payment_status = 'paid'")->fetch_assoc()['count'],
             ];
             ?>
             <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">

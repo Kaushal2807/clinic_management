@@ -22,8 +22,9 @@ try {
     }
 
     $conn = ClinicContext::getConnection();
-    $stmt = $conn->prepare("DELETE FROM expense_categories WHERE id = ?");
-    $stmt->bind_param("i", $id);
+    $clinicId = ClinicContext::getClinicId();
+    $stmt = $conn->prepare("DELETE FROM expense_categories WHERE id = ? AND clinic_id = ?");
+    $stmt->bind_param("ii", $id, $clinicId);
     
     if ($stmt->execute()) {
         echo json_encode(['success' => true, 'message' => 'Category deleted successfully']);

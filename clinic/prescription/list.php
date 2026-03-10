@@ -14,6 +14,7 @@ ClinicContext::init();
 $pageTitle = 'All Prescriptions';
 $clinic = ClinicContext::getClinicInfo();
 $conn = ClinicContext::getConnection();
+$clinicId = ClinicContext::getClinicId();
 
 // Pagination
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -23,7 +24,7 @@ $offset = ($page - 1) * $perPage;
 // Search and patient filter
 $search = $_GET['search'] ?? '';
 $patient_uid_filter = $_GET['patient_uid'] ?? '';
-$searchCondition = '';
+$searchCondition = "WHERE p.clinic_id = $clinicId";
 $conditions = [];
 
 if ($search) {
@@ -37,7 +38,7 @@ if ($patient_uid_filter) {
 }
 
 if (!empty($conditions)) {
-    $searchCondition = "WHERE " . implode(' AND ', $conditions);
+    $searchCondition .= " AND " . implode(' AND ', $conditions);
 }
 
 // Get total count
@@ -58,8 +59,8 @@ $prescriptions = $conn->query($query);
 // Get patient info if filtering by patient
 $patientInfo = null;
 if ($patient_uid_filter) {
-    $stmt = $conn->prepare("SELECT name, patient_uid FROM patients WHERE patient_uid = ?");
-    $stmt->bind_param('s', $patient_uid_filter);
+    $stmt = $conn->prepare("SELECT name, patient_uid FROM patients WHERE patient_uid = ? AND clinic_id = ?");
+    $stmt->bind_param('si', $patient_uid_filter, $clinicId);
     $stmt->execute();
     $patientInfo = $stmt->get_result()->fetch_assoc();
 }
@@ -146,8 +147,8 @@ include __DIR__ . '/../../includes/clinic_header.php';
                             <?php while ($rx = $prescriptions->fetch_assoc()): ?>
                             <?php
                             // Get medicine count
-                            $stmt = $conn->prepare("SELECT COUNT(*) as count FROM prescription_medicines WHERE prescription_id = ?");
-                            $stmt->bind_param('i', $rx['id']);
+                            $stmt = $conn->prepare("SELECT COUNT(*) as count FROM prescription_medicines WHERE prescription_id = ? AND clinic_id = ?");
+                            $stmt->bind_param('ii', $rx['id'], $clinicId);
                             $stmt->execute();
                             $medicineCount = $stmt->get_result()->fetch_assoc()['count'];
                             ?>

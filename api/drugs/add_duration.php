@@ -19,9 +19,11 @@ try {
         throw new Exception('Duration value is required');
     }
     
-    $sql = "INSERT INTO durations (duration_value, created_at) VALUES (?, NOW())";
+    $clinicId = ClinicContext::getClinicId();
+    
+    $sql = "INSERT INTO durations (clinic_id, duration_value, created_at) VALUES (?, ?, NOW())";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param('s', $duration_value);
+    $stmt->bind_param('is', $clinicId, $duration_value);
     
     if ($stmt->execute()) {
         echo json_encode(['success' => true, 'message' => 'Duration added successfully']);

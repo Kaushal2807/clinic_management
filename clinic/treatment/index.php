@@ -14,21 +14,22 @@ ClinicContext::init();
 $pageTitle = 'Treatment Management';
 $clinic = ClinicContext::getClinicInfo();
 $conn = ClinicContext::getConnection();
+$clinicId = ClinicContext::getClinicId();
 
 // Get patient UID if provided
 $patient_uid = $_GET['patient_uid'] ?? '';
 
 // Get all patients
-$patients = $conn->query("SELECT patient_uid, name FROM patients ORDER BY name");
+$patients = $conn->query("SELECT patient_uid, name FROM patients WHERE clinic_id = $clinicId ORDER BY name");
 
 // Get treatment categories
-$categories = $conn->query("SELECT * FROM treatment_categories ORDER BY category_name");
+$categories = $conn->query("SELECT * FROM treatment_categories WHERE clinic_id = $clinicId ORDER BY category_name");
 
 // If patient_uid provided, get patient details
 $patient = null;
 if ($patient_uid) {
-    $stmt = $conn->prepare("SELECT * FROM patients WHERE patient_uid = ?");
-    $stmt->bind_param('s', $patient_uid);
+    $stmt = $conn->prepare("SELECT * FROM patients WHERE patient_uid = ? AND clinic_id = ?");
+    $stmt->bind_param('si', $patient_uid, $clinicId);
     $stmt->execute();
     $result = $stmt->get_result();
     $patient = $result->fetch_assoc();

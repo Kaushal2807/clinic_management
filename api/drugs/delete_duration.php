@@ -19,9 +19,11 @@ try {
         throw new Exception('Invalid duration ID');
     }
     
-    $sql = "DELETE FROM durations WHERE id = ?";
+    $clinicId = ClinicContext::getClinicId();
+    
+    $sql = "DELETE FROM durations WHERE id = ? AND clinic_id = ?";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param('i', $id);
+    $stmt->bind_param('ii', $id, $clinicId);
     
     if ($stmt->execute()) {
         echo json_encode(['success' => true, 'message' => 'Duration deleted successfully']);

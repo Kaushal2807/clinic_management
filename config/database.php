@@ -2,6 +2,7 @@
 /**
  * Database Configuration and Connection Manager
  * Singleton pattern for database connection management
+ * 2-Database Architecture: clinic_master + clinic_data
  */
 
 class Database {
@@ -10,7 +11,8 @@ class Database {
     private $host = 'localhost';
     private $user = 'root';
     private $pass = '';
-    private $masterDb = 'clinic_management_master';
+    private $masterDb = 'clinic_master';
+    private $clinicDataDb = 'clinic_data';
     
     private function __construct() {
         $this->conn = new mysqli($this->host, $this->user, $this->pass, $this->masterDb);
@@ -64,7 +66,16 @@ class Database {
     }
     
     /**
-     * Switch to specific database
+     * Switch to clinic_data database
+     */
+    public function switchToClinicData() {
+        if (!$this->conn->select_db($this->clinicDataDb)) {
+            throw new Exception("Cannot switch to clinic_data database");
+        }
+    }
+    
+    /**
+     * Switch to specific database (kept for compatibility)
      */
     public function switchDatabase($dbName) {
         if (!$this->conn->select_db($dbName)) {

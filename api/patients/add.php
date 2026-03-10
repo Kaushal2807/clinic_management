@@ -13,6 +13,7 @@ header('Content-Type: application/json');
 
 try {
     $conn = ClinicContext::getConnection();
+    $clinicId = ClinicContext::getClinicId();
     
     // Validate required fields
     $required = ['patient_uid', 'name', 'age', 'contact_number', 'date_of_visit'];
@@ -24,11 +25,11 @@ try {
     
     // Prepare SQL
     $sql = "INSERT INTO patients (
-        patient_uid, name, age, gender, contact_number, email, address, date_of_visit,
+        clinic_id, patient_uid, name, age, gender, contact_number, email, address, date_of_visit,
         total_visit, notes, total_amount, payment_status, payment_pending,
         chief_complain, medical_history, oral_diet_habit, family_history, xray_remark,
         created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
     
     $stmt = $conn->prepare($sql);
     
@@ -53,8 +54,8 @@ try {
     $xray = $_POST['xray_remark'] ?? '';
     
     $stmt->bind_param(
-        'ssisssssisdsdsssss',
-        $patient_uid, $name, $age, $gender, $contact, $email, $address, $date_visit,
+        'ississsssisdsdsssss',
+        $clinicId, $patient_uid, $name, $age, $gender, $contact, $email, $address, $date_visit,
         $total_visit, $notes, $total_amount, $payment_status, $payment_pending,
         $chief_complain, $medical_history, $oral_diet, $family_history, $xray
     );

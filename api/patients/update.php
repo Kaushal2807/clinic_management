@@ -39,6 +39,7 @@ try {
     }
 
     $conn = ClinicContext::getConnection();
+    $clinicId = ClinicContext::getClinicId();
     
     $stmt = $conn->prepare("UPDATE patients SET 
         name = ?, 
@@ -59,10 +60,10 @@ try {
         oral_diet_habit = ?, 
         family_history = ?, 
         xray_remark = ?
-        WHERE patient_uid = ?");
+        WHERE patient_uid = ? AND clinic_id = ?");
     
     $stmt->bind_param(
-        "sissssssissdsssss",
+        "sisssssssissdsssssi",
         $name,
         $age,
         $gender,
@@ -81,7 +82,8 @@ try {
         $oral_diet_habit,
         $family_history,
         $xray_remark,
-        $patient_uid
+        $patient_uid,
+        $clinicId
     );
     
     if ($stmt->execute()) {

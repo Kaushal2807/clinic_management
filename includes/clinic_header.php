@@ -55,23 +55,23 @@ $currentPath = $_SERVER['PHP_SELF'];
             <div class="flex justify-between items-center h-20">
                 
                 <!-- Logo & Clinic Name -->
-                <div class="flex items-center gap-4">
+                <div class="flex items-center gap-3 flex-shrink-0">
                     <?php if ($clinic['logo_path']): ?>
                         <img src="<?= BASE_URL ?>/<?= htmlspecialchars($clinic['logo_path']) ?>" 
                              alt="<?= htmlspecialchars($clinic['clinic_name']) ?>"
-                             class="h-16 w-16 rounded-xl object-cover shadow-lg ring-2 ring-indigo-100">
+                             class="h-12 w-12 rounded-xl object-cover shadow-lg ring-2 ring-indigo-100">
                     <?php else: ?>
-                        <div class="h-16 w-16 gradient-bg rounded-xl flex items-center justify-center shadow-lg">
-                            <span class="text-white font-bold text-2xl">
+                        <div class="h-12 w-12 gradient-bg rounded-xl flex items-center justify-center shadow-lg">
+                            <span class="text-white font-bold text-xl">
                                 <?= strtoupper(substr($clinic['clinic_name'], 0, 1)) ?>
                             </span>
                         </div>
                     <?php endif; ?>
-                    <div>
-                        <h1 class="text-2xl font-bold text-indigo-600">
+                    <div class="whitespace-nowrap">
+                        <h1 class="text-lg font-bold text-indigo-600 leading-tight">
                             <?= htmlspecialchars($clinic['clinic_name']) ?>
                         </h1>
-                        <p class="text-sm text-gray-600 font-medium">Management System</p>
+                        <p class="text-xs text-gray-600 font-medium">Management System</p>
                     </div>
                 </div>
 

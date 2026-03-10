@@ -24,8 +24,9 @@ try {
     }
 
     $conn = ClinicContext::getConnection();
-    $stmt = $conn->prepare("UPDATE work_types SET work_name = ?, cost = ?, description = ? WHERE id = ?");
-    $stmt->bind_param("sdsi", $work_name, $cost, $description, $id);
+    $clinicId = ClinicContext::getClinicId();
+    $stmt = $conn->prepare("UPDATE work_types SET work_name = ?, cost = ?, description = ? WHERE id = ? AND clinic_id = ?");
+    $stmt->bind_param("sdsii", $work_name, $cost, $description, $id, $clinicId);
     
     if ($stmt->execute()) {
         echo json_encode(['success' => true, 'message' => 'Work type updated successfully']);

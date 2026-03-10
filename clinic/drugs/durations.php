@@ -14,9 +14,10 @@ ClinicContext::init();
 $pageTitle = 'Manage Durations';
 $clinic = ClinicContext::getClinicInfo();
 $conn = ClinicContext::getConnection();
+$clinicId = ClinicContext::getClinicId();
 
 // Fetch all durations
-$durations = $conn->query("SELECT * FROM durations ORDER BY id ASC");
+$durations = $conn->query("SELECT * FROM durations WHERE clinic_id = $clinicId ORDER BY id ASC");
 
 include __DIR__ . '/../../includes/clinic_header.php';
 ?>
