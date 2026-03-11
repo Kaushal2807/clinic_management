@@ -2,7 +2,7 @@
 /**
  * Database Configuration and Connection Manager
  * Singleton pattern for database connection management
- * 2-Database Architecture: clinic_master + clinic_data
+ * Single Database Architecture: clinic_management
  */
 
 class Database {
@@ -11,11 +11,10 @@ class Database {
     private $host = 'localhost';
     private $user = 'root';
     private $pass = '';
-    private $masterDb = 'clinic_master';
-    private $clinicDataDb = 'clinic_data';
+    private $database = 'clinic_management';
     
     private function __construct() {
-        $this->conn = new mysqli($this->host, $this->user, $this->pass, $this->masterDb);
+        $this->conn = new mysqli($this->host, $this->user, $this->pass, $this->database);
         
         if ($this->conn->connect_error) {
             error_log("Database Connection Error: " . $this->conn->connect_error);
@@ -66,28 +65,19 @@ class Database {
     }
     
     /**
-     * Switch to clinic_data database
+     * Legacy methods kept for backward compatibility (no-op)
+     * These do nothing now since we use a single database
      */
     public function switchToClinicData() {
-        if (!$this->conn->select_db($this->clinicDataDb)) {
-            throw new Exception("Cannot switch to clinic_data database");
-        }
+        // No-op: kept for backward compatibility
     }
     
-    /**
-     * Switch to specific database (kept for compatibility)
-     */
-    public function switchDatabase($dbName) {
-        if (!$this->conn->select_db($dbName)) {
-            throw new Exception("Cannot switch to database: $dbName");
-        }
-    }
-    
-    /**
-     * Switch back to master database
-     */
     public function switchToMaster() {
-        $this->conn->select_db($this->masterDb);
+        // No-op: kept for backward compatibility
+    }
+    
+    public function switchDatabase($dbName) {
+        // No-op: kept for backward compatibility
     }
     
     /**

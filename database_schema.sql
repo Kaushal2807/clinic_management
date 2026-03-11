@@ -1,19 +1,14 @@
 -- ============================================
 -- CLINIC MANAGEMENT SYSTEM - DATABASE SCHEMA
--- 2-Database Centralized Architecture
--- DB1: clinic_master (clinics, users, logs)
--- DB2: clinic_data (all clinic operational data)
--- Version 3.0.0
+-- Single Database Architecture
+-- All tables in one database: clinic_management
+-- Version 4.0.0
 -- ============================================
 
--- ============================================
--- DATABASE 1: clinic_master
--- ============================================
-
-CREATE DATABASE IF NOT EXISTS clinic_master 
+CREATE DATABASE IF NOT EXISTS clinic_management 
 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-USE clinic_master;
+USE clinic_management;
 
 -- ============================================
 -- TABLE: clinics
@@ -90,16 +85,6 @@ VALUES (
     NULL,
     1
 ) ON DUPLICATE KEY UPDATE email=email;
-
--- ============================================
--- DATABASE 2: clinic_data
--- All clinic operational data with clinic_id
--- ============================================
-
-CREATE DATABASE IF NOT EXISTS clinic_data 
-CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
-USE clinic_data;
 
 -- ============================================
 -- TABLE: patients
@@ -438,7 +423,7 @@ CREATE TABLE IF NOT EXISTS payments (
 -- ============================================
 -- SUCCESS MESSAGE
 -- ============================================
-SELECT 'Database schema created successfully!' as status;
+SELECT 'clinic_management database created successfully!' as status;
 
 -- ============================================
 -- CREDENTIALS:

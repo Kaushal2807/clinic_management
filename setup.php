@@ -294,7 +294,7 @@ if ($step === 2 && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="step-number">2</div>
                     <div class="step-content">
                         <h3>What Will Be Created</h3>
-                        <p>Master database (clinic_master) + Data database (clinic_data)</p>
+                        <p>Single database (clinic_management) with all tables</p>
                     </div>
                 </div>
                 
@@ -323,8 +323,7 @@ if ($step === 2 && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 <h2 style="color: #333; margin-bottom: 20px; text-align: center;">Installation Successful!</h2>
                 
                 <div class="alert alert-success">
-                    <strong>✓ Master Database Created:</strong> clinic_master<br>
-                    <strong>✓ Data Database Created:</strong> clinic_data<br>
+                    <strong>✓ Database Created:</strong> clinic_management<br>
                     <strong>✓ Queries Executed:</strong> <?= isset($_GET['executed']) ? (int)$_GET['executed'] : 'N/A' ?>
                 </div>
                 

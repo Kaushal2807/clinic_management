@@ -1,8 +1,8 @@
 <?php
 /**
  * Clinic Context Manager
- * Handles switching to clinic_data database and managing clinic-specific operations
- * All data isolation is done via clinic_id WHERE clauses
+ * Manages clinic-specific operations and session data
+ * All data isolation is done via clinic_id WHERE clauses in queries
  */
 
 require_once __DIR__ . '/database.php';
@@ -12,7 +12,7 @@ class ClinicContext {
     private static $clinicInfo = null;
     
     /**
-     * Initialize clinic context and switch to clinic_data database
+     * Initialize clinic context
      */
     public static function init() {
         if (!Session::isClinic()) {
@@ -26,7 +26,7 @@ class ClinicContext {
         
         $db = Database::getInstance();
         
-        // Get clinic information from master
+        // Get clinic information
         $stmt = $db->getConnection()->prepare(
             "SELECT id, clinic_name, clinic_prefix, logo_path, contact_email, contact_phone, address 
              FROM clinics WHERE id = ? AND is_active = 1"
@@ -40,8 +40,6 @@ class ClinicContext {
             return false;
         }
         
-        // Switch to clinic_data database (shared for all clinics)
-        $db->switchToClinicData();
         self::$clinicInfo = $clinic;
         
         // Store clinic info in session for easy access
@@ -61,7 +59,7 @@ class ClinicContext {
     }
     
     /**
-     * Get clinic database connection (already switched to clinic_data)
+     * Get database connection
      */
     public static function getConnection() {
         return Database::getInstance()->getConnection();

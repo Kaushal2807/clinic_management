@@ -106,10 +106,8 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
     $clinicId = (int)$_GET['delete'];
     
     try {
-        // Delete all clinic data from clinic_data database
-        $dataDb = Database::getInstance();
-        $dataDb->switchToClinicData();
-        $conn = $dataDb->getConnection();
+        // Delete all clinic data
+        $conn = Database::getInstance()->getConnection();
         
         $dataTables = ['prescription_medicines', 'prescriptions', 'patient_work_done', 'treatments', 'expenses', 'certificate', 'appointments', 'payments', 'patients', 'medicine', 'treatment_categories', 'work_types', 'work_done', 'expense_categories', 'doses', 'durations'];
         foreach ($dataTables as $table) {
@@ -118,8 +116,7 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
             $delStmt->execute();
         }
         
-        // Switch back to master and delete clinic record (cascade will handle users)
-        $dataDb->switchToMaster();
+        // Delete clinic record (cascade will handle users)
         $stmt = $db->prepare("DELETE FROM clinics WHERE id = ?");
         $stmt->bind_param('i', $clinicId);
         $stmt->execute();
@@ -127,7 +124,6 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
         Session::set('flash_message', "Clinic deleted successfully");
         Session::set('flash_type', 'success');
     } catch (Exception $e) {
-        Database::getInstance()->switchToMaster();
         Session::set('flash_message', "Error deleting clinic: " . $e->getMessage());
         Session::set('flash_type', 'error');
     }
@@ -157,12 +153,10 @@ if (isset($_GET['toggle']) && is_numeric($_GET['toggle'])) {
 $clinics = $db->query("SELECT * FROM clinics ORDER BY created_at DESC");
 
 /**
- * Insert default data rows for a new clinic into clinic_data tables
+ * Insert default data rows for a new clinic
  */
 function insertClinicDefaults($clinicId) {
-    $dataDb = Database::getInstance();
-    $dataDb->switchToClinicData();
-    $conn = $dataDb->getConnection();
+    $conn = Database::getInstance()->getConnection();
     
     // Treatment categories
     $categories = [
@@ -243,9 +237,6 @@ function insertClinicDefaults($clinicId) {
         $durStmt->bind_param('is', $clinicId, $dur);
         $durStmt->execute();
     }
-    
-    // Switch back to master
-    Database::getInstance()->switchToMaster();
 }
 ?>
 <!DOCTYPE html>

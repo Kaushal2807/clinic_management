@@ -22,8 +22,6 @@ if (!$clinic) {
     die("Clinic not found");
 }
 
-// Switch to clinic data database
-$db->switchToClinicData();
 $conn = $db->getConnection();
 
 // Get statistics
@@ -54,9 +52,6 @@ $s = $conn->prepare("SELECT * FROM patients WHERE clinic_id = ? ORDER BY date_of
 $s->bind_param('i', $clinicId);
 $s->execute();
 $recentPatients = $s->get_result();
-
-// Switch back to master database
-$db->switchToMaster();
 ?>
 <!DOCTYPE html>
 <html lang="en">
